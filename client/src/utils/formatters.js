@@ -162,3 +162,4 @@ export const slugify = (text) => {
     .replace(/^-+/, '')
     .replace(/-+$/, '');
 };
+

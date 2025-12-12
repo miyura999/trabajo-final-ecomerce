@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, SlidersHorizontal, X } from 'lucide-react';
 import Header from '../../components/layout/Header';
 import Footer from '../../components/layout/Footer';
@@ -8,163 +8,48 @@ import { useCart } from '../../hooks/useCart';
 import { PRODUCT_CATEGORIES, SORT_OPTIONS } from '../../utils/constants';
 import axios from 'axios';
 import api from '../../services/api.service';
-import { data } from 'autoprefixer';
 
 const ProductsPage = () => {
   const { addToCart } = useCart();
+
   const [products, setProducts] = useState([]);
-  const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [sortBy, setSortBy] = useState('newest');
   const [showFilters, setShowFilters] = useState(false);
 
-  // Datos mock de productos
-  const mockProducts = [
-    {
-      id: 1,
-      name: 'Laptop Gaming Pro X1',
-      price: 2999000,
-      image: 'https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=500',
-      description: 'Potente laptop gaming con procesador Intel i7 y tarjeta gráfica RTX 3070',
-      category: 'Laptops',
-      stock: 15,
-      rating: 4.8
-    },
-    {
-      id: 2,
-      name: 'iPhone 15 Pro Max',
-      price: 4899000,
-      image: 'https://images.unsplash.com/photo-1678652197831-2d180705cd2c?w=500',
-      description: 'El último smartphone de Apple con chip A17 Pro',
-      category: 'Smartphones',
-      stock: 8,
-      rating: 4.9
-    },
-    {
-      id: 3,
-      name: 'Mouse Inalámbrico RGB',
-      price: 149000,
-      image: 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=500',
-      description: 'Mouse gaming inalámbrico con iluminación RGB personalizable',
-      category: 'Accesorios',
-      stock: 50,
-      rating: 4.5
-    },
-    {
-      id: 4,
-      name: 'Teclado Mecánico RGB',
-      price: 299000,
-      image: 'https://images.unsplash.com/photo-1595225476474-87563907a212?w=500',
-      description: 'Teclado mecánico con switches Cherry MX',
-      category: 'Accesorios',
-      stock: 30,
-      rating: 4.7
-    },
-    {
-      id: 5,
-      name: 'Monitor 27" 4K',
-      price: 1299000,
-      image: 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=500',
-      description: 'Monitor profesional 4K con panel IPS',
-      category: 'Monitores',
-      stock: 12,
-      rating: 4.6
-    },
-    {
-      id: 6,
-      name: 'Audífonos Bluetooth Premium',
-      price: 599000,
-      image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500',
-      description: 'Audífonos con cancelación de ruido activa',
-      category: 'Audio',
-      stock: 25,
-      rating: 4.8
-    },
-    {
-      id: 7,
-      name: 'Tablet Pro 12.9"',
-      price: 3499000,
-      image: 'https://images.unsplash.com/photo-1561154464-82e9adf32764?w=500',
-      description: 'Tablet profesional con pantalla Retina',
-      category: 'Tablets',
-      stock: 10,
-      rating: 4.7
-    },
-    {
-      id: 8,
-      name: 'Smartwatch Series 9',
-      price: 1899000,
-      image: 'https://images.unsplash.com/photo-1579586337278-3befd40fd17a?w=500',
-      description: 'Reloj inteligente con monitoreo de salud avanzado',
-      category: 'Smartwatch',
-      stock: 20,
-      rating: 4.6
-    }
-  ];
-
   const fetchProducts = async () => {
-    const { data } = await api.get('/products')
-    setProducts(data.data)
-  }
+    try {
+      setLoading(true);
 
-  useEffect(() => {
-    // Simular carga de productos
-      fetchProducts()
-      setFilteredProducts(products);
+      const params = {
+        search: searchTerm || undefined,
+        categoria: selectedCategory || undefined,
+        sort: sortBy || undefined
+      };
+
+      const { data } = await api.get('/products', { params });
+      setProducts(data.data);
+
+    } catch (error) {
+      console.error("Error al obtener productos:", error);
+    } finally {
       setLoading(false);
-  }, []);
+    }
+  };
 
+  // ✅ UN SOLO useEffect con debounce para searchTerm
   useEffect(() => {
-    filterAndSortProducts();
-  }, [searchTerm, selectedCategory, sortBy, products]);
+    const delay = setTimeout(() => {
+      fetchProducts();
+    }, 400); // Debounce solo para el search
 
-  const filterAndSortProducts = () => {
-    let filtered = [...products];
+    return () => clearTimeout(delay);
+  }, [searchTerm, selectedCategory, sortBy]);
 
-    // Filtrar por búsqueda
-    if (searchTerm) {
-      filtered = filtered.filter(product =>
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    // Filtrar por categoría
-    if (selectedCategory) {
-      filtered = filtered.filter(product => product.category === selectedCategory);
-    }
-
-    // Ordenar
-    switch (sortBy) {
-      case 'price-asc':
-        filtered.sort((a, b) => a.price - b.price);
-        break;
-      case 'price-desc':
-        filtered.sort((a, b) => b.price - a.price);
-        break;
-      case 'name-asc':
-        filtered.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-      case 'name-desc':
-        filtered.sort((a, b) => b.name.localeCompare(a.name));
-        break;
-      case 'rating':
-        filtered.sort((a, b) => b.rating - a.rating);
-        break;
-      default:
-        // newest - sin cambios
-        break;
-    }
-
-    setFilteredProducts(filtered);
-  };
-
-  const handleAddToCart = (product) => {
-    addToCart(product);
-    // Aquí podrías agregar una notificación toast
-  };
+  const handleAddToCart = (product) => addToCart(product);
 
   const clearFilters = () => {
     setSearchTerm('');
@@ -293,12 +178,12 @@ const ProductsPage = () => {
             {/* Contador de resultados */}
             <div className="mb-4">
               <p className="text-gray-600">
-                {filteredProducts.length} {filteredProducts.length === 1 ? 'producto encontrado' : 'productos encontrados'}
+                {products.length} {products.length === 1 ? 'producto encontrado' : 'productos encontrados'}
               </p>
             </div>
 
             <ProductList
-              products={filteredProducts}
+              products={products}
               onAddToCart={handleAddToCart}
               loading={loading}
             />

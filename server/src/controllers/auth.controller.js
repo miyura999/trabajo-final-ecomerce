@@ -1,5 +1,6 @@
 const authService = require('../services/auth.service');
 const { successResponse, errorResponse } = require('../helpers/response.helper');
+const UserModel = require('../models/User.model');
 
 class AuthController {
   async register(req, res) {
@@ -29,6 +30,18 @@ class AuthController {
       return successResponse(res, 200, 'Token renovado exitosamente', result);
     } catch (error) {
       return errorResponse(res, 401, error.message);
+    }
+  }
+
+  async check(req, res) {
+    try {
+      const { id } = req.user
+      const response = await UserModel.findById(id)
+      
+      if(!response)
+      return successResponse(res, 200, "Estado, logueado", response)
+    } catch (error) {
+      return errorResponse(res, 401, error.message)
     }
   }
 }

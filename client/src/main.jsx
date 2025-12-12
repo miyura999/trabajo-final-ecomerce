@@ -5,6 +5,7 @@ import App from './App';
 import { AuthProvider } from './hooks/useAuth';
 import { CartProvider } from './hooks/useCart';
 import './index.css';
+import { ToastContainer, Zoom } from 'react-toastify';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
@@ -12,6 +13,19 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <AuthProvider>
         <CartProvider>
           <App />
+          <ToastContainer
+            position="bottom-right"
+            autoClose={5000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick={false}
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="colored"
+            transition={Zoom}
+          />
         </CartProvider>
       </AuthProvider>
     </BrowserRouter>

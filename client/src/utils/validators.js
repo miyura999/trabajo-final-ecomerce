@@ -104,21 +104,3 @@ export const validators = {
     return '';
   }
 };
-
-// Ejemplos de uso:
-// const validationRules = {
-//   email: validators.compose(
-//     validators.required('El email es requerido'),
-//     validators.email('Email inválido')
-//   ),
-//   password: validators.compose(
-//     validators.required('La contraseña es requerida'),
-//     validators.minLength(8, 'Mínimo 8 caracteres'),
-//     validators.password()
-//   ),
-//   age: validators.compose(
-//     validators.required('La edad es requerida'),
-//     validators.number(),
-//     validators.min(18, 'Debes ser mayor de 18 años')
-//   )
-// };

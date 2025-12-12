@@ -1,3 +1,5 @@
+const multer = require('multer')
+
 const errorHandler = (err, req, res, next) => {
   console.error('Error:', err);
 
@@ -66,6 +68,7 @@ const errorHandler = (err, req, res, next) => {
   }
 
   // Error genérico
+  console.log(err)
   res.status(err.statusCode || 500).json({
     success: false,
     message: err.message || 'Error interno del servidor'

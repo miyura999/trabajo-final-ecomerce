@@ -16,7 +16,7 @@ const RegisterPage = () => {
   const [error, setError] = useState('');
 
   const validationRules = {
-    name: validators.compose(
+    nombre: validators.compose(
       validators.required('El nombre es requerido'),
       validators.minLength(3, 'El nombre debe tener al menos 3 caracteres')
     ),
@@ -24,7 +24,7 @@ const RegisterPage = () => {
       validators.required('El email es requerido'),
       validators.email('Email inválido')
     ),
-    phone: validators.compose(
+    telefono: validators.compose(
       validators.required('El teléfono es requerido'),
       validators.phone('Teléfono inválido')
     ),
@@ -53,9 +53,9 @@ const RegisterPage = () => {
     handleSubmit
   } = useForm(
     {
-      name: '',
+      nombre: '',
       email: '',
-      phone: '',
+      telefono: '',
       password: '',
       confirmPassword: ''
     },
@@ -67,16 +67,16 @@ const RegisterPage = () => {
     setError('');
 
     try {
-      // Simulación de registro
-      await new Promise(resolve => setTimeout(resolve, 1500));
       
-      register({
-        name: formValues.name,
+      const success = await register({
+        nombre: formValues.nombre,
         email: formValues.email,
-        phone: formValues.phone
+        telefono: formValues.telefono,
+        password: formValues.password
       });
       
-      navigate('/products');
+      if(!success) throw new Error('Registro fallido');
+      navigate(success && '/login');
     } catch (err) {
       setError('Error al crear la cuenta. Intenta nuevamente.');
     } finally {
@@ -85,7 +85,7 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-100 flex items-center justify-center py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full">
         {/* Logo y título */}
         <div className="text-center mb-8">
@@ -115,8 +115,8 @@ const RegisterPage = () => {
             {/* Nombre completo */}
             <Input
               label="Nombre Completo"
-              name="name"
-              value={values.name}
+              name="nombre"
+              value={values.nombre}
               onChange={handleChange}
               onBlur={handleBlur}
               error={errors.name}
@@ -144,13 +144,13 @@ const RegisterPage = () => {
             {/* Teléfono */}
             <Input
               label="Teléfono"
-              name="phone"
+              name="telefono"
               type="tel"
-              value={values.phone}
+              value={values.telefono}
               onChange={handleChange}
               onBlur={handleBlur}
-              error={errors.phone}
-              touched={touched.phone}
+              error={errors.telefono}
+              touched={touched.telefono}
               placeholder="3001234567"
               required
               icon={Phone}
@@ -228,25 +228,6 @@ const RegisterPage = () => {
                 </li>
               </ul>
             </div>
-
-            {/* Términos y condiciones */}
-            <label className="flex items-start gap-2">
-              <input
-                type="checkbox"
-                required
-                className="w-4 h-4 mt-1 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-              />
-              <span className="text-sm text-gray-600">
-                Acepto los{' '}
-                <a href="#" className="text-indigo-600 hover:text-indigo-700 font-medium">
-                  Términos y Condiciones
-                </a>
-                {' '}y la{' '}
-                <a href="#" className="text-indigo-600 hover:text-indigo-700 font-medium">
-                  Política de Privacidad
-                </a>
-              </span>
-            </label>
 
             {/* Botón submit */}
             <Button

@@ -12,6 +12,7 @@ import ManageProductsPage from '../pages/admin/ManageProductsPage';
 import ManageOrdersPage from '../pages/admin/ManageOrdersPage';
 import PrivateRoute from './PrivateRoute';
 import AdminRoute from './AdminRoute';
+import AdminLayout from '../components/layout/AdminLayout';
 
 const AppRoutes = () => {
   return (
@@ -22,7 +23,7 @@ const AppRoutes = () => {
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/products" element={<ProductsPage />} />
       <Route path="/products/:id" element={<ProductDetailPage />} />
-
+      
       {/* Rutas privadas - Cliente */}
       <Route path="/cart" element={<PrivateRoute><CartPage /></PrivateRoute>} />
       <Route path="/my-orders" element={<PrivateRoute><MyOrdersPage /></PrivateRoute>} />
@@ -32,6 +33,7 @@ const AppRoutes = () => {
       <Route path="/admin" element={<AdminRoute><DashboardPage /></AdminRoute>} />
       <Route path="/admin/products" element={<AdminRoute><ManageProductsPage /></AdminRoute>} />
       <Route path="/admin/orders" element={<AdminRoute><ManageOrdersPage /></AdminRoute>} />
+      <Route path='layout' element={<AdminLayout />} />
     </Routes>
   );
 };

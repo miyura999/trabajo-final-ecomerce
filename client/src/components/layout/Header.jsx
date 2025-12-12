@@ -10,6 +10,9 @@ const Header = () => {
   const { itemCount } = useCart();
   const navigate = useNavigate();
 
+  // Verificar si el usuario es admin
+  const isAdmin = user?.role?.name === 'admin' || user?.role === 'admin';
+
   const handleLogout = () => {
     logout();
     navigate('/login');
@@ -39,7 +42,7 @@ const Header = () => {
                 <Link to="/my-orders" className="hover:text-indigo-200 transition">
                   Mis Pedidos
                 </Link>
-                {user?.role === 'admin' && (
+                {isAdmin && (
                   <Link to="/admin" className="hover:text-indigo-200 transition flex items-center gap-1">
                     <LayoutDashboard className="w-4 h-4" />
                     Admin
@@ -68,6 +71,11 @@ const Header = () => {
                 <div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-700 rounded-lg">
                   <User className="w-5 h-5" />
                   <span className="text-sm">{user?.name || user?.email}</span>
+                  {isAdmin && (
+                    <span className="ml-2 px-2 py-0.5 bg-yellow-500 text-yellow-900 text-xs font-bold rounded">
+                      ADMIN
+                    </span>
+                  )}
                 </div>
                 
                 <button 
@@ -142,20 +150,28 @@ const Header = () => {
                     <Package className="w-5 h-5" />
                     Mis Pedidos
                   </Link>
-                  {user?.role === 'admin' && (
+                  {isAdmin && (
                     <Link 
                       to="/admin" 
                       onClick={() => setMobileMenuOpen(false)}
-                      className="hover:text-indigo-200 transition py-2 flex items-center gap-2"
+                      className="hover:text-indigo-200 transition py-2 flex items-center gap-2 bg-indigo-700 rounded-lg px-3"
                     >
                       <LayoutDashboard className="w-5 h-5" />
                       Panel Admin
+                      <span className="ml-auto px-2 py-0.5 bg-yellow-500 text-yellow-900 text-xs font-bold rounded">
+                        ADMIN
+                      </span>
                     </Link>
                   )}
                   <div className="border-t border-indigo-500 pt-3 mt-2">
                     <div className="flex items-center gap-2 mb-3">
                       <User className="w-5 h-5" />
                       <span className="text-sm">{user?.name || user?.email}</span>
+                      {isAdmin && (
+                        <span className="ml-auto px-2 py-0.5 bg-yellow-500 text-yellow-900 text-xs font-bold rounded">
+                          ADMIN
+                        </span>
+                      )}
                     </div>
                     <button 
                       onClick={handleLogout}
