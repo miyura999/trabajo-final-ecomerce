@@ -13,6 +13,7 @@ import ManageOrdersPage from '../pages/admin/ManageOrdersPage';
 import PrivateRoute from './PrivateRoute';
 import AdminRoute from './AdminRoute';
 import AdminLayout from '../components/layout/AdminLayout';
+import ManageUsersPage from '../pages/admin/ManageUsersPage';
 
 const AppRoutes = () => {
   return (
@@ -33,6 +34,7 @@ const AppRoutes = () => {
       <Route path="/admin" element={<AdminRoute><DashboardPage /></AdminRoute>} />
       <Route path="/admin/products" element={<AdminRoute><ManageProductsPage /></AdminRoute>} />
       <Route path="/admin/orders" element={<AdminRoute><ManageOrdersPage /></AdminRoute>} />
+      <Route path="/admin/users" element={< ManageUsersPage />} />
       <Route path='layout' element={<AdminLayout />} />
     </Routes>
   );
