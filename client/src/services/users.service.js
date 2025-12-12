@@ -1,4 +1,5 @@
 import axios from 'axios';
+import api from './api.service';
 
 const API_URL = 'http://localhost:5000/api';
 
@@ -129,7 +130,7 @@ const usersService = {
   // Cambiar estado de usuario
   changeUserStatus: async (userId, estado) => {
     try {
-      const response = await apiClient.patch(`/users/${userId}/status`, { estado });
+      const response = await api.put(`/users/${userId}`, { estado });
       return {
         success: true,
         data: response.data.data,

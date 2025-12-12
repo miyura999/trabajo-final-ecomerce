@@ -26,16 +26,6 @@ const Sidebar = () => {
       path: '/admin/users',
       icon: Users,
       label: 'Usuarios'
-    },
-    {
-      path: '/admin/stats',
-      icon: BarChart3,
-      label: 'Estadísticas'
-    },
-    {
-      path: '/admin/settings',
-      icon: Settings,
-      label: 'Configuración'
     }
   ];
 
@@ -47,7 +37,8 @@ const Sidebar = () => {
   };
 
   return (
-    <aside className="w-64 bg-white shadow-lg min-h-screen">
+    <aside className="w-64 bg-white shadow-lg h-screen max-h-screen overflow-hidden">
+
       <div className="p-6">
         <h2 className="text-2xl font-bold text-gray-800 mb-6">Panel Admin</h2>
         <nav className="space-y-2">

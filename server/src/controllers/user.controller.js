@@ -1,10 +1,12 @@
 const userService = require('../services/user.service');
 const { successResponse, errorResponse } = require('../helpers/response.helper');
+const UserModel = require('../models/User.model');
 
 class UserController {
   async getAllUsers(req, res) {
+    const { email: emailUser } = req.user
     try {
-      const users = await userService.getAllUsers();
+      const users = await UserModel.find({ email: { $not: { $eq: emailUser } } })
       return successResponse(res, 200, 'Usuarios obtenidos exitosamente', users);
     } catch (error) {
       return errorResponse(res, 500, error.message);

@@ -5,18 +5,20 @@ import { useAuth } from '../hooks/useAuth';
 const AdminRoute = ({ children }) => {
   const { isAuthenticated, user } = useAuth();
 
+  // Si NO está autenticado, redirige al login
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  user?.role !== 'admin' && <Navigate to="/" replace />;
-  
+  // Verificar si es admin (soporta ambos formatos)
+  const isAdmin = user?.role?.name === 'admin' || user?.role === 'admin';
 
-  user?.role?.name === 'admin' && <Navigate to="/admin" replace />;
+  // Si está autenticado pero NO es admin, redirige al inicio
+  if (!isAdmin) {
+    return <Navigate to="/" replace />;
+  }
 
-
-  
-
+  // Si es admin, muestra el contenido
   return children;
 };
 

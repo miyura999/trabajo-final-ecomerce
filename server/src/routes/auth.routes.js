@@ -14,6 +14,4 @@ router.post('/login', loginValidator, validateRequest, authController.login);
 // ⭐ NUEVO: POST /api/auth/refresh-token
 router.post('/refresh-token', refreshTokenValidator, validateRequest, authController.refreshToken);
 
-router.post('/check-auth', autenticated, authController.check)
-
 module.exports = router;

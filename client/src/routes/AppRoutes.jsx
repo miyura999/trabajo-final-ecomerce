@@ -10,32 +10,80 @@ import OrderDetailPage from '../pages/orders/OrderDetailPage';
 import DashboardPage from '../pages/admin/DashboardPage';
 import ManageProductsPage from '../pages/admin/ManageProductsPage';
 import ManageOrdersPage from '../pages/admin/ManageOrdersPage';
+import ManageUsersPage from '../pages/admin/ManageUsersPage';
 import PrivateRoute from './PrivateRoute';
 import AdminRoute from './AdminRoute';
-import AdminLayout from '../components/layout/AdminLayout';
-import ManageUsersPage from '../pages/admin/ManageUsersPage';
+import UsersLayout from '../components/layout/UsersLayout';
 
 const AppRoutes = () => {
   return (
     <Routes>
       {/* Rutas públicas */}
-      <Route path="/" element={<ProductsPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
-      <Route path="/products" element={<ProductsPage />} />
-      <Route path="/products/:id" element={<ProductDetailPage />} />
-      
-      {/* Rutas privadas - Cliente */}
-      <Route path="/cart" element={<PrivateRoute><CartPage /></PrivateRoute>} />
-      <Route path="/my-orders" element={<PrivateRoute><MyOrdersPage /></PrivateRoute>} />
-      <Route path="/orders/:id" element={<PrivateRoute><OrderDetailPage /></PrivateRoute>} />
+        <Route path="/" element={<ProductsPage />} />
+        <Route path="/products" element={<ProductsPage />} />
+        <Route path="/products/:id" element={<ProductDetailPage />} />
+
+        {/* Rutas privadas - Cliente */}
+        <Route
+          path="/cart"
+          element={
+            <PrivateRoute>
+              <CartPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/my-orders"
+          element={
+            <PrivateRoute>
+              <MyOrdersPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/orders/:id"
+          element={
+            <PrivateRoute>
+              <OrderDetailPage />
+            </PrivateRoute>
+          }
+        />
 
       {/* Rutas privadas - Admin */}
-      <Route path="/admin" element={<AdminRoute><DashboardPage /></AdminRoute>} />
-      <Route path="/admin/products" element={<AdminRoute><ManageProductsPage /></AdminRoute>} />
-      <Route path="/admin/orders" element={<AdminRoute><ManageOrdersPage /></AdminRoute>} />
-      <Route path="/admin/users" element={< ManageUsersPage />} />
-      <Route path='layout' element={<AdminLayout />} />
+      <Route
+        path="/admin"
+        element={
+          <AdminRoute>
+            <DashboardPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/products"
+        element={
+          <AdminRoute>
+            <ManageProductsPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/orders"
+        element={
+          <AdminRoute>
+            <ManageOrdersPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/users"
+        element={
+          <AdminRoute>
+            <ManageUsersPage />
+          </AdminRoute>
+        }
+      />
     </Routes>
   );
 };

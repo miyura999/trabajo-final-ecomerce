@@ -44,7 +44,7 @@ const LoginPage = () => {
       const validateLogin = await login(formValues.email, formValues.password);
 
       if(validateLogin){
-        navigate('/products');
+        navigate('/admin');
       }
       
     } catch (err) {

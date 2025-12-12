@@ -11,6 +11,7 @@ import usersService from '../../services/users.service';
 import { useForm } from '../../hooks/useForm';
 import { validators } from '../../utils/validators';
 import { formatDate } from '../../utils/formatters';
+import { toast, Zoom } from 'react-toastify';
 
 const ManageUsersPage = () => {
   const [users, setUsers] = useState([]);
@@ -38,6 +39,12 @@ const ManageUsersPage = () => {
       )
       : () => ''
   };
+
+const formatId = (idUser) => {
+  const longitud = idUser.length
+  const id = idUser.slice(longitud - 4, longitud)
+  return id
+}
 
   const {
     values,
@@ -129,17 +136,17 @@ const ManageUsersPage = () => {
       });
       fetchUsers();
     } else {
-              toast.error('No se ha podido eliminar la cuentaB!', {
-          position: "bottom-right",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: false,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          theme: "colored",
-          transition: Zoom,
-        });
+      toast.error('No se ha podido eliminar la cuenta!', {
+        position: "bottom-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+        transition: Zoom,
+      });
     }
     setShowDeleteModal(false);
     setSelectedUser(null);
@@ -152,9 +159,18 @@ const ManageUsersPage = () => {
 
     if (result.success) {
       fetchUsers();
-      alert(`Usuario ${newStatus === 'activo' ? 'activado' : 'desactivado'} exitosamente`);
     } else {
-      alert(result.message);
+      toast.error('Ha ocurido un error cambiando el estado!', {
+        position: "bottom-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+        transition: Zoom,
+      });
     }
   };
 
@@ -322,7 +338,7 @@ const ManageUsersPage = () => {
                             </div>
                             <div>
                               <p className="font-semibold text-gray-900">{user.nombre}</p>
-                              <p className="text-sm text-gray-500">{user._id}</p>
+                              <p className="text-sm text-gray-500">{formatId(user._id)}</p>
                             </div>
                           </div>
                         </td>
@@ -342,16 +358,16 @@ const ManageUsersPage = () => {
                         </td>
                         <td className="py-4 px-4">
                           <span className={`px-3 py-1 rounded-full text-sm font-medium ${user.role?.name === 'admin'
-                              ? 'bg-purple-100 text-purple-800'
-                              : 'bg-blue-100 text-blue-800'
+                            ? 'bg-purple-100 text-purple-800'
+                            : 'bg-blue-100 text-blue-800'
                             }`}>
                             {user.role?.name || 'Sin rol'}
                           </span>
                         </td>
                         <td className="py-4 px-4">
                           <span className={`px-3 py-1 rounded-full text-sm font-medium ${user.estado === 'activo'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
                             }`}>
                             {user.estado}
                           </span>
@@ -364,8 +380,8 @@ const ManageUsersPage = () => {
                             <button
                               onClick={() => toggleUserStatus(user)}
                               className={`p-2 rounded-lg transition ${user.estado === 'activo'
-                                  ? 'text-orange-600 hover:bg-orange-50'
-                                  : 'text-green-600 hover:bg-green-50'
+                                ? 'text-orange-600 hover:bg-orange-50'
+                                : 'text-green-600 hover:bg-green-50'
                                 }`}
                               title={user.estado === 'activo' ? 'Desactivar' : 'Activar'}
                             >

@@ -70,7 +70,7 @@ class AuthService {
     }
 
     // Generar tokens
-    const token = generateToken({ id: user._id, role: user.role.name });
+    const token = generateToken({ id: user._id, role: user.role.name, name: user.nombre });
     const refreshToken = generateRefreshToken({ id: user._id });
 
     // Remover password del objeto user

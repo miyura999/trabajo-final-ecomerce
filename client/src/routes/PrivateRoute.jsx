@@ -5,11 +5,12 @@ import { useAuth } from '../hooks/useAuth';
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
 
-
-  if (isAuthenticated) {
+  // Si NO está autenticado, redirige al login
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
+  // Si está autenticado, muestra el contenido
   return children;
 };
 

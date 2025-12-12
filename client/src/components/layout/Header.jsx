@@ -34,9 +34,6 @@ const Header = () => {
             <Link to="/" className="hover:text-indigo-200 transition">
               Inicio
             </Link>
-            <Link to="/products" className="hover:text-indigo-200 transition">
-              Productos
-            </Link>
             {isAuthenticated && (
               <>
                 <Link to="/my-orders" className="hover:text-indigo-200 transition">

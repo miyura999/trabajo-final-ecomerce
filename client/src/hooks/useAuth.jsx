@@ -1,125 +1,138 @@
 import { useState, useEffect, createContext, useContext } from 'react';
-import api from '../services/api.service';
-import { toast } from 'react-toastify';
-import { Zoom } from 'react-toastify/unstyled';
+import axios from 'axios';
+import { jwtDecode } from "jwt-decode"; 
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      setLoading(true);
+    const token = localStorage.getItem('token')
+    if(!token){
+      setIsAuthenticated(false)
+    }
 
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          setLoading(false);
-          return;
-        }
-
-        const { data } = await api.post("/auth/check-auth", {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-
-        // Aquí guardamos el primer usuario (solo de ejemplo)
-        const user = data.data;
-        setUser(user);
-        setIsAuthenticated(true)
-
-      } catch (err) {
-        console.log("Error autenticación:", err);
-        localStorage.removeItem("token");
-        setIsAuthenticated(false);
-
-      }
-
-      setLoading(false);
-    };
-
-    checkAuth();
-  }, []);
+    try {
+      const decoded = jwtDecode(token)
+      setUser(decoded)
+    } catch (error) {
+      setIsAuthenticated(false)
+    }
+  }, [])
 
 
   const login = async (email, password) => {
     try {
-      const res = await api.post("/auth/login", { email, password });
+      const response = await axios.post('/auth/login', { email, password });
+      
+      // Verificar respuesta exitosa
+      if (response.data.success) {
+        const { user, token, refreshToken } = response.data.data;
 
-      // Ver token recibido
-      console.log("Login:", res.data);
+        // Guardar tokens y usuario en localStorage
+        localStorage.setItem('token', token);
+        localStorage.setItem('refreshToken', refreshToken);
+        
+        // Configurar token en axios
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
-      // Guarda token
-      localStorage.setItem("token", res.data.data.token);
+        setUser(user);
+        setIsAuthenticated(true);
 
-      // Guarda usuario opcionalmente
-      setUser(res.data.data.user);
-      setIsAuthenticated(true);
-      return true
-
+        return { success: true, user };
+      } else {
+        return { 
+          success: false, 
+          error: response.data.message || 'Error al iniciar sesión' 
+        };
+      }
     } catch (error) {
-      toast.error('Datos inválidos!', {
-        position: "bottom-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: false,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "colored",
-        transition: Zoom,
-      });
-
-      setIsAuthenticated(false);
-      return; // Para no ejecutar nada más
+      console.error('Login error:', error);
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Error al iniciar sesión' 
+      };
     }
   };
 
   const register = async (userData) => {
     try {
-      const response = await api.post('/auth/register', userData);
-      if (response.status === 201) {
-        toast.success('cuenta creada!', {
-          position: "bottom-right",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: false,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          theme: "colored",
-          transition: Zoom,
-        });
-        new Promise((resolve) => setTimeout(resolve, 1500)); // Esperar 1.5 segundos
-        return true
+      const response = await axios.post('/auth/register', userData);
+      
+      // Verificar respuesta exitosa
+      if (response.data.success) {
+        const { user, token, refreshToken } = response.data.data;
+
+        // Guardar tokens y usuario en localStorage
+        localStorage.setItem('token', token);
+        if (refreshToken) {
+          localStorage.setItem('refreshToken', refreshToken);
+        }
+        localStorage.setItem('user', JSON.stringify(user));
+        
+        // Configurar token en axios
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+        setUser(user);
+        setIsAuthenticated(true);
+
+        return { success: true, user };
+      } else {
+        return { 
+          success: false, 
+          error: response.data.message || 'Error al registrarse' 
+        };
       }
-
     } catch (error) {
-
-      toast.error('Error al crear la cuenta!', {
-        position: "bottom-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: false,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "colored",
-        transition: Zoom,
-      });
-      return false
+      console.error('Register error:', error);
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Error al registrarse' 
+      };
     }
   };
 
   const logout = () => {
+    // Limpiar todos los datos de autenticación
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
+    delete axios.defaults.headers.common['Authorization'];
+    
     setUser(null);
     setIsAuthenticated(false);
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
+  };
+
+  const refreshAccessToken = async () => {
+    try {
+      const refreshToken = localStorage.getItem('refreshToken');
+      
+      if (!refreshToken) {
+        throw new Error('No refresh token available');
+      }
+
+      const response = await axios.post('/auth/refresh-token', { refreshToken });
+      
+      if (response.data.success) {
+        const { token } = response.data.data;
+        
+        // Actualizar token
+        localStorage.setItem('token', token);
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        
+        return { success: true };
+      } else {
+        throw new Error('Failed to refresh token');
+      }
+    } catch (error) {
+      console.error('Error refreshing token:', error);
+      // Si falla el refresh, hacer logout
+      logout();
+      return { success: false };
+    }
   };
 
   const value = {
@@ -128,7 +141,8 @@ export const AuthProvider = ({ children }) => {
     loading,
     login,
     register,
-    logout
+    logout,
+    refreshAccessToken
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -137,7 +151,7 @@ export const AuthProvider = ({ children }) => {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth debe ser usado dentro de AuthProvider');
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };
