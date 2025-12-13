@@ -40,6 +40,7 @@ app.use('/api/users', require('./routes/user.routes'));
 app.use('/api/products', require('./routes/product.routes'));
 app.use('/api/cart', require('./routes/cart.routes'));
 app.use('/api/orders', require('./routes/order.routes'));
+app.use('/api/roles', require('./routes/role.routes'))
 
 // Middleware de manejo de errores (debe ir al final)
 app.use(require('./middlewares/errorHandler.middleware'));

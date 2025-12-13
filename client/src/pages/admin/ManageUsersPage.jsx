@@ -6,15 +6,14 @@ import Sidebar from '../../components/layout/Sidebar';
 import Button from '../../components/common/Button';
 import Card from '../../components/common/Card';
 import Modal from '../../components/common/Modal';
-import Input from '../../components/common/Input';
 import usersService from '../../services/users.service';
-import { useForm } from '../../hooks/useForm';
-import { validators } from '../../utils/validators';
 import { formatDate } from '../../utils/formatters';
-import { toast, Zoom } from 'react-toastify';
+import { Bounce, toast, Zoom } from 'react-toastify';
+import axios from 'axios';
 
 const ManageUsersPage = () => {
   const [users, setUsers] = useState([]);
+  const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -23,53 +22,43 @@ const ManageUsersPage = () => {
   const [modalMode, setModalMode] = useState('create');
   const [filterRole, setFilterRole] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  
+  // Estados del formulario
+  const [formData, setFormData] = useState({
+    nombre: '',
+    email: '',
+    telefono: '',
+    password: '',
+    role: ''
+  });
+  
+  const [formErrors, setFormErrors] = useState({});
 
-  // Validaciones del formulario
-  const validationRules = {
-    nombre: validators.required('El nombre es requerido'),
-    email: validators.compose(
-      validators.required('El email es requerido'),
-      validators.email('Email inválido')
-    ),
-    telefono: validators.phone('Teléfono inválido'),
-    password: modalMode === 'create'
-      ? validators.compose(
-        validators.required('La contraseña es requerida'),
-        validators.minLength(8, 'Mínimo 8 caracteres')
-      )
-      : () => ''
+  const formatId = (idUser) => {
+    const longitud = idUser.length;
+    const id = idUser.slice(longitud - 4, longitud);
+    return id;
   };
 
-const formatId = (idUser) => {
-  const longitud = idUser.length
-  const id = idUser.slice(longitud - 4, longitud)
-  return id
-}
-
-  const {
-    values,
-    errors,
-    touched,
-    handleChange,
-    handleBlur,
-    handleSubmit,
-    resetForm,
-    setFieldValue
-  } = useForm(
-    {
-      nombre: '',
-      email: '',
-      telefono: '',
-      password: '',
-      role: '69319e7865f7b31067b6020c' // ID de rol cliente por defecto
-    },
-    validationRules
-  );
-
-  // Cargar usuarios
+  // Cargar usuarios y roles
   useEffect(() => {
+    fetchRoles();
     fetchUsers();
   }, []);
+
+  const fetchRoles = async () => {
+    try {
+      const { data } = await axios.get('/roles');
+      const roles = data.data;
+      setRoles(roles);
+    } catch (error) {
+      toast.error('Error cargando roles', {
+        position: "bottom-right",
+        autoClose: 2000,
+        theme: "colored",
+      });
+    }
+  };
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -77,9 +66,20 @@ const formatId = (idUser) => {
     if (result.success) {
       setUsers(result.data);
     } else {
-      alert(result.message);
+      toast.error('Error mostrando usuarios!', {
+        position: "bottom-right",
+        autoClose: 2000,
+        theme: "colored",
+      });
     }
     setLoading(false);
+  };
+
+  // Función helper para obtener el nombre del rol desde el ID
+  const getRoleName = (roleId) => {
+    if (!roleId) return 'Sin rol';
+    const role = roles.find(r => r._id === roleId);
+    return role ? role.name : 'Sin rol';
   };
 
   // Filtrar usuarios
@@ -88,11 +88,74 @@ const formatId = (idUser) => {
       user.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesRole = filterRole === '' || user.role?.name === filterRole;
+    const roleName = getRoleName(user.role);
+    const matchesRole = filterRole === '' || roleName === filterRole;
     const matchesStatus = filterStatus === '' || user.estado === filterStatus;
 
     return matchesSearch && matchesRole && matchesStatus;
   });
+
+  // Validar formulario
+  const validateForm = () => {
+    const errors = {};
+
+    if (!formData.nombre.trim()) {
+      errors.nombre = 'El nombre es requerido';
+    }
+
+    if (!formData.email.trim()) {
+      errors.email = 'El email es requerido';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = 'Email inválido';
+    }
+
+    if (formData.telefono && !/^\d{10}$/.test(formData.telefono)) {
+      errors.telefono = 'Teléfono inválido (10 dígitos)';
+    }
+
+    if (!formData.role) {
+      errors.role = 'Debes seleccionar un rol';
+    }
+
+    if (modalMode === 'create') {
+      if (!formData.password) {
+        errors.password = 'La contraseña es requerida';
+      } else if (formData.password.length < 8) {
+        errors.password = 'Mínimo 8 caracteres';
+      }
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // Manejar cambios en inputs
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    // Limpiar error del campo cuando el usuario escribe
+    if (formErrors[name]) {
+      setFormErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+
+  // Resetear formulario
+  const resetForm = () => {
+    setFormData({
+      nombre: '',
+      email: '',
+      telefono: '',
+      password: '',
+      role: ''
+    });
+    setFormErrors({});
+  };
 
   // Abrir modal para crear
   const handleCreate = () => {
@@ -106,10 +169,14 @@ const formatId = (idUser) => {
   const handleEdit = (user) => {
     setModalMode('edit');
     setSelectedUser(user);
-    setFieldValue('nombre', user.nombre);
-    setFieldValue('email', user.email);
-    setFieldValue('telefono', user.telefono || '');
-    setFieldValue('role', user.role?._id || '');
+    setFormData({
+      nombre: user.nombre || '',
+      email: user.email || '',
+      telefono: user.telefono || '',
+      password: '',
+      role: user.role || '' // El role viene como ID string
+    });
+    setFormErrors({});
     setShowModal(true);
   };
 
@@ -126,11 +193,6 @@ const formatId = (idUser) => {
       toast.success('Usuario Eliminado!', {
         position: "bottom-right",
         autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: false,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
         theme: "colored",
         transition: Zoom,
       });
@@ -139,11 +201,6 @@ const formatId = (idUser) => {
       toast.error('No se ha podido eliminar la cuenta!', {
         position: "bottom-right",
         autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: false,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
         theme: "colored",
         transition: Zoom,
       });
@@ -158,16 +215,16 @@ const formatId = (idUser) => {
     const result = await usersService.changeUserStatus(user._id, newStatus);
 
     if (result.success) {
+      toast.success('Estado actualizado!', {
+        position: "bottom-right",
+        autoClose: 2000,
+        theme: "colored",
+      });
       fetchUsers();
     } else {
-      toast.error('Ha ocurido un error cambiando el estado!', {
+      toast.error('Ha ocurrido un error cambiando el estado!', {
         position: "bottom-right",
         autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: false,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
         theme: "colored",
         transition: Zoom,
       });
@@ -175,25 +232,74 @@ const formatId = (idUser) => {
   };
 
   // Enviar formulario
-  const onSubmit = async (formData) => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
     setLoading(true);
 
-    let result;
-    if (modalMode === 'create') {
-      result = await usersService.createUser(formData);
-    } else {
-      const { password, ...updateData } = formData;
-      result = await usersService.updateUser(selectedUser._id, updateData);
+    try {
+      if (modalMode === 'create') {
+        // Crear usuario - asegurar que role se envíe correctamente
+        console.log('📤 Datos a enviar:', formData);
+        console.log('📋 Role seleccionado:', formData.role);
+        
+        const result = await usersService.createUser(formData);
+        
+        if (result.success) {
+          toast.success(`Usuario ${formData.nombre} ha sido creado con éxito`, {
+            position: "bottom-right",
+            autoClose: 5000,
+            theme: "colored",
+            transition: Bounce,
+          });
+          setShowModal(false);
+          resetForm();
+          fetchUsers();
+        } else {
+          toast.error(`No se pudo crear el usuario`, {
+            position: "bottom-right",
+            autoClose: 5000,
+            theme: "colored",
+            transition: Bounce,
+          });
+        }
+      } else {
+        // Editar usuario - enviar role como ID
+        const { password, ...updateData } = formData;
+        const response = await axios.put(`/users/${selectedUser._id}`, updateData);
+        
+        if (response.data.success) {
+          toast.success(`Usuario ${formData.nombre} ha sido actualizado con éxito`, {
+            position: "bottom-right",
+            autoClose: 5000,
+            theme: "colored",
+            transition: Bounce,
+          });
+          setShowModal(false);
+          resetForm();
+          fetchUsers();
+        } else {
+          toast.error('No se pudo actualizar el usuario', {
+            position: "bottom-right",
+            autoClose: 5000,
+            theme: "colored",
+            transition: Bounce,
+          });
+        }
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Error en la operación', {
+        position: "bottom-right",
+        autoClose: 5000,
+        theme: "colored",
+        transition: Bounce,
+      });
     }
 
-    if (result.success) {
-      alert(result.message);
-      setShowModal(false);
-      resetForm();
-      fetchUsers();
-    } else {
-      alert(result.message);
-    }
     setLoading(false);
   };
 
@@ -204,7 +310,7 @@ const formatId = (idUser) => {
       <div className="flex-1">
         <Header />
 
-        <div className="container mx-auto px-6 py-8">
+        <div className="container mx-auto px-6 py-2">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
             <div>
@@ -264,7 +370,7 @@ const formatId = (idUser) => {
                 <div>
                   <p className="text-gray-600 text-sm mb-1">Clientes</p>
                   <p className="text-3xl font-bold text-blue-600">
-                    {users.filter(u => u.role?.name === 'cliente').length}
+                    {users.filter(u => getRoleName(u.role) === 'cliente').length}
                   </p>
                 </div>
                 <span className="text-3xl">🛒</span>
@@ -314,7 +420,7 @@ const formatId = (idUser) => {
                 <p className="text-gray-600">Cargando usuarios...</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto overflow-y-auto max-h-[380px]">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-gray-200">
@@ -329,7 +435,7 @@ const formatId = (idUser) => {
                   <tbody>
                     {filteredUsers.map((user) => (
                       <tr key={user._id} className="border-b border-gray-100 hover:bg-gray-50 transition">
-                        <td className="py-4 px-4">
+                        <td className="py-2 px-4">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
                               <span className="text-indigo-600 font-semibold">
@@ -338,18 +444,18 @@ const formatId = (idUser) => {
                             </div>
                             <div>
                               <p className="font-semibold text-gray-900">{user.nombre}</p>
-                              <p className="text-sm text-gray-500">{formatId(user._id)}</p>
+                              <p className="text-xs text-gray-500">{formatId(user._id)}</p>
                             </div>
                           </div>
                         </td>
                         <td className="py-4 px-4">
                           <div className="space-y-1">
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <div className="flex items-center gap-2 text-xs text-gray-600">
                               <Mail className="w-4 h-4" />
                               <span>{user.email}</span>
                             </div>
                             {user.telefono && (
-                              <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <div className="flex items-center gap-2 text-xs text-gray-600">
                                 <Phone className="w-4 h-4" />
                                 <span>{user.telefono}</span>
                               </div>
@@ -357,22 +463,22 @@ const formatId = (idUser) => {
                           </div>
                         </td>
                         <td className="py-4 px-4">
-                          <span className={`px-3 py-1 rounded-full text-sm font-medium ${user.role?.name === 'admin'
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getRoleName(user.role) === 'admin'
                             ? 'bg-purple-100 text-purple-800'
                             : 'bg-blue-100 text-blue-800'
                             }`}>
-                            {user.role?.name || 'Sin rol'}
+                            {getRoleName(user.role)}
                           </span>
                         </td>
                         <td className="py-4 px-4">
-                          <span className={`px-3 py-1 rounded-full text-sm font-medium ${user.estado === 'activo'
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${user.estado === 'activo'
                             ? 'bg-green-100 text-green-800'
                             : 'bg-red-100 text-red-800'
                             }`}>
                             {user.estado}
                           </span>
                         </td>
-                        <td className="py-4 px-4 text-sm text-gray-600">
+                        <td className="py-4 px-4 text-xs text-gray-600">
                           {formatDate(user.createdAt, 'numeric')}
                         </td>
                         <td className="py-4 px-4">
@@ -424,8 +530,6 @@ const formatId = (idUser) => {
             </div>
           </Card>
         </div>
-
-        <Footer />
       </div>
 
       {/* Modal de crear/editar */}
@@ -435,61 +539,119 @@ const formatId = (idUser) => {
         title={modalMode === 'create' ? 'Nuevo Usuario' : 'Editar Usuario'}
         size="lg"
       >
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <Input
-            label="Nombre Completo"
-            name="nombre"
-            value={values.nombre}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            error={errors.nombre}
-            touched={touched.nombre}
-            placeholder="Ej: Juan Pérez"
-            required
-          />
-
-          <Input
-            label="Email"
-            name="email"
-            type="email"
-            value={values.email}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            error={errors.email}
-            touched={touched.email}
-            placeholder="ejemplo@email.com"
-            required
-            icon={Mail}
-          />
-
-          <Input
-            label="Teléfono"
-            name="telefono"
-            type="tel"
-            value={values.telefono}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            error={errors.telefono}
-            touched={touched.telefono}
-            placeholder="3001234567"
-            icon={Phone}
-          />
-
-          {modalMode === 'create' && (
-            <Input
-              label="Contraseña"
-              name="password"
-              type="password"
-              value={values.password}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              error={errors.password}
-              touched={touched.password}
-              placeholder="••••••••"
-              required
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Nombre */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Nombre Completo <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="nombre"
+              value={formData.nombre}
+              onChange={handleInputChange}
+              placeholder="Ej: Juan Pérez"
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                formErrors.nombre ? 'border-red-500' : 'border-gray-300'
+              }`}
             />
+            {formErrors.nombre && (
+              <p className="mt-1 text-sm text-red-600">{formErrors.nombre}</p>
+            )}
+          </div>
+
+          {/* Email */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Email <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                placeholder="ejemplo@email.com"
+                className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                  formErrors.email ? 'border-red-500' : 'border-gray-300'
+                }`}
+              />
+            </div>
+            {formErrors.email && (
+              <p className="mt-1 text-sm text-red-600">{formErrors.email}</p>
+            )}
+          </div>
+
+          {/* Teléfono */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Teléfono
+            </label>
+            <div className="relative">
+              <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="tel"
+                name="telefono"
+                value={formData.telefono}
+                onChange={handleInputChange}
+                placeholder="3001234567"
+                className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                  formErrors.telefono ? 'border-red-500' : 'border-gray-300'
+                }`}
+              />
+            </div>
+            {formErrors.telefono && (
+              <p className="mt-1 text-sm text-red-600">{formErrors.telefono}</p>
+            )}
+          </div>
+
+          {/* Rol */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Rol <span className="text-red-500">*</span>
+            </label>
+            <select
+              name="role"
+              value={formData.role}
+              onChange={handleInputChange}
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                formErrors.role ? 'border-red-500' : 'border-gray-300'
+              }`}
+            >
+              <option value="">Selecciona un rol</option>
+              {roles.map((rol) => (
+                <option key={rol._id} value={rol._id}>{rol.name}</option>
+              ))}
+            </select>
+            {formErrors.role && (
+              <p className="mt-1 text-sm text-red-600">{formErrors.role}</p>
+            )}
+          </div>
+
+          {/* Contraseña (solo en crear) */}
+          {modalMode === 'create' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Contraseña <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                placeholder="••••••••"
+                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                  formErrors.password ? 'border-red-500' : 'border-gray-300'
+                }`}
+              />
+              {formErrors.password && (
+                <p className="mt-1 text-sm text-red-600">{formErrors.password}</p>
+              )}
+            </div>
           )}
 
+          {/* Botones */}
           <div className="flex gap-3 pt-4">
             <Button
               type="submit"

@@ -83,7 +83,6 @@ class AuthService {
     };
   }
 
-  // ⭐ NUEVO: Método para refresh token
   async refreshToken(refreshToken) {
     // Verificar el refresh token
     const decoded = verifyRefreshToken(refreshToken);

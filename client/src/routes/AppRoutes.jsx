@@ -12,8 +12,7 @@ import ManageProductsPage from '../pages/admin/ManageProductsPage';
 import ManageOrdersPage from '../pages/admin/ManageOrdersPage';
 import ManageUsersPage from '../pages/admin/ManageUsersPage';
 import PrivateRoute from './PrivateRoute';
-import AdminRoute from './AdminRoute';
-import UsersLayout from '../components/layout/UsersLayout';
+import AdminRoute from './AdminRoute';  
 
 const AppRoutes = () => {
   return (

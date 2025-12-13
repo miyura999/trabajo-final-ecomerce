@@ -8,6 +8,7 @@ import Card from '../../components/common/Card';
 import { useCart } from '../../hooks/useCart';
 import { formatPrice } from '../../utils/formatters';
 import api from '../../services/api.service';
+import { useAuth } from '../../hooks/useAuth';
 
 const ProductDetailPage = () => {
   const { id } = useParams();
@@ -16,7 +17,7 @@ const ProductDetailPage = () => {
   const [product, setProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [selectedImage, setSelectedImage] = useState(0);
+  const { user } = useAuth()
 
   // Mock data del producto
   const setActualProduct = async () => {
@@ -121,24 +122,6 @@ const ProductDetailPage = () => {
               </div>
             </Card>
 
-            <div className="grid grid-cols-3 gap-3">
-              {/* {product.images.map((image, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSelectedImage(index)}
-                  className={`
-                    aspect-square rounded-lg overflow-hidden border-2 transition
-                    ${selectedImage === index ? 'border-indigo-600' : 'border-gray-200 hover:border-gray-300'}
-                  `}
-                >
-                  <img
-                    src={image}
-                    alt={`${product.name} ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-              ))} */}
-            </div>
           </div>
 
           {/* Información del producto */}
@@ -217,7 +200,7 @@ const ProductDetailPage = () => {
                   variant="primary"
                   size="lg"
                   onClick={handleAddToCart}
-                  disabled={product.stock === 0}
+                  disabled={product.stock === 0 || !user}
                   className="flex-1"
                 >
                   <ShoppingCart className="w-5 h-5" />
@@ -227,7 +210,7 @@ const ProductDetailPage = () => {
                   variant="secondary"
                   size="lg"
                   onClick={handleBuyNow}
-                  disabled={product.stock === 0}
+                  disabled={product.stock === 0 || !user}
                   className="flex-1"
                 >
                   Comprar Ahora

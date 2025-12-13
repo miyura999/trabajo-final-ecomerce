@@ -3,9 +3,11 @@ import { Link } from 'react-router-dom';
 import { ShoppingCart, Eye, Star } from 'lucide-react';
 import Button from '../common/Button';
 import Card from '../common/Card';
+import { useAuth } from '../../hooks/useAuth';
 
 const ProductCard = ({ product, onAddToCart }) => {
   const { _id: id, nombre, precio, imagen, descripcion, stock, categoria } = product;
+  const { isAuthenticated } = useAuth()
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('es-CO', {
@@ -93,7 +95,7 @@ const ProductCard = ({ product, onAddToCart }) => {
             variant="primary"
             size="sm"
             onClick={() => onAddToCart(product)}
-            disabled={stock === 0}
+            disabled={stock === 0  || !isAuthenticated}
             className="flex items-center gap-1"
           >
             <ShoppingCart className="w-4 h-4" />

@@ -2,53 +2,164 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, ShoppingBag } from 'lucide-react';
 import Input from '../../components/common/Input';
-import Button from '../../components/common/Button';
-import { useForm } from '../../hooks/useForm';
 import { useAuth } from '../../hooks/useAuth';
-import { validators } from '../../utils/validators';
+import { toast } from 'react-toastify';
 
 const LoginPage = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
-  const validationRules = {
-    email: validators.compose(
-      validators.required('El email es requerido'),
-      validators.email('Email inválido')
-    ),
-    password: validators.required('La contraseña es requerida')
+  // Estados del formulario
+  const [values, setValues] = useState({
+    email: '',
+    password: ''
+  });
+
+  const [errors, setErrors] = useState({
+    email: '',
+    password: ''
+  });
+
+  const [touched, setTouched] = useState({
+    email: false,
+    password: false
+  });
+
+  // Validación de email
+  const validateEmail = (email) => {
+    if (!email) {
+      return 'El email es requerido';
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return 'Email inválido';
+    }
+    return '';
   };
 
-  const {
-    values,
-    errors,
-    touched,
-    handleChange,
-    handleBlur,
-    handleSubmit
-  } = useForm(
-    { email: '', password: '' },
-    validationRules
-  );
+  // Validación de password
+  const validatePassword = (password) => {
+    if (!password) {
+      return 'La contraseña es requerida';
+    }
+    return '';
+  };
 
-  const onSubmit = async (formValues) => {
-    setLoading(true);
-    setError('');
+  // Handle change con validación en tiempo real
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    
+    setValues(prev => ({
+      ...prev,
+      [name]: value
+    }));
 
-    try {
-      // Simulación de login
-
-      const validateLogin = await login(formValues.email, formValues.password);
-
-      if(validateLogin){
-        navigate('/admin');
+    // Validar en tiempo real solo si el campo ya fue tocado
+    if (touched[name]) {
+      let error = '';
+      if (name === 'email') {
+        error = validateEmail(value);
+      } else if (name === 'password') {
+        error = validatePassword(value);
       }
       
+      setErrors(prev => ({
+        ...prev,
+        [name]: error
+      }));
+    }
+  };
+
+  // Handle blur para marcar campo como tocado
+  const handleBlur = (e) => {
+    const { name } = e.target;
+    
+    setTouched(prev => ({
+      ...prev,
+      [name]: true
+    }));
+
+    // Validar al salir del campo
+    let error = '';
+    if (name === 'email') {
+      error = validateEmail(values[name]);
+    } else if (name === 'password') {
+      error = validatePassword(values[name]);
+    }
+    
+    setErrors(prev => ({
+      ...prev,
+      [name]: error
+    }));
+  };
+
+  // Validar todo el formulario
+  const validateForm = () => {
+    const emailError = validateEmail(values.email);
+    const passwordError = validatePassword(values.password);
+
+    setErrors({
+      email: emailError,
+      password: passwordError
+    });
+
+    setTouched({
+      email: true,
+      password: true
+    });
+
+    return !emailError && !passwordError;
+  };
+
+  // Handle submit
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Validar formulario completo
+    if (!validateForm()) {
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const validateLogin = await login(values.email, values.password);
+
+      if (validateLogin) {
+        toast.success('¡Bienvenido!', {
+          position: "bottom-right",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "colored",
+        });
+        navigate('/admin')
+      } else {
+        toast.error('Credenciales inválidas', {
+          position: "bottom-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "colored",
+        });
+      }
     } catch (err) {
-      setError('Email o contraseña incorrectos');
+      toast.error('Error al iniciar sesión. Intenta nuevamente.', {
+        position: "bottom-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "colored",
+      });
+      console.error('Login error:', err);
     } finally {
       setLoading(false);
     }
@@ -74,14 +185,7 @@ const LoginPage = () => {
 
         {/* Formulario */}
         <div className="bg-white rounded-lg shadow-xl p-8">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Error general */}
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-                {error}
-              </div>
-            )}
-
+          <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email */}
             <Input
               label="Email"
@@ -147,18 +251,6 @@ const LoginPage = () => {
             >
               Iniciar Sesión
             </Button>
-
-            {/* Usuarios de prueba */}
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-              <p className="text-sm font-semibold text-gray-700 mb-2">
-                Usuarios de prueba:
-              </p>
-              <div className="space-y-1 text-xs text-gray-600">
-                <p><strong>Admin:</strong> admin@techstore.com</p>
-                <p><strong>Cliente:</strong> cliente@techstore.com</p>
-                <p className="text-gray-500 mt-2">Cualquier contraseña es válida</p>
-              </div>
-            </div>
           </form>
 
           {/* Divider */}
@@ -199,3 +291,67 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
+
+// Tu componente Button debería verse así:
+
+const Button = ({ 
+  children, 
+  type = 'button',  // ⚠️ IMPORTANTE: default debe ser 'button', NO 'submit'
+  variant = 'primary',
+  size = 'md',
+  fullWidth = false,
+  loading = false,
+  disabled = false,
+  onClick,
+  ...props 
+}) => {
+  
+  const handleClick = (e) => {
+    if (loading || disabled) {
+      e.preventDefault(); // Prevenir acción si está cargando o deshabilitado
+      return;
+    }
+    
+    if (onClick) {
+      onClick(e);
+    }
+  };
+
+  return (
+    <button
+      type={type}
+      disabled={disabled || loading}
+      onClick={handleClick}
+      className={`
+        ${fullWidth ? 'w-full' : ''}
+        ${variant === 'primary' ? 'bg-indigo-600 text-white hover:bg-indigo-700' : ''}
+        ${size === 'lg' ? 'py-3 px-6 text-lg' : 'py-2 px-4'}
+        rounded-lg font-semibold transition
+        disabled:opacity-50 disabled:cursor-not-allowed
+      `}
+      {...props}
+    >
+      {loading ? (
+        <span className="flex items-center justify-center">
+          <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+            <circle 
+              className="opacity-25" 
+              cx="12" 
+              cy="12" 
+              r="10" 
+              stroke="currentColor" 
+              strokeWidth="4"
+              fill="none"
+            />
+            <path 
+              className="opacity-75" 
+              fill="currentColor" 
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            />
+          </svg>
+          Cargando...
+        </span>
+      ) : children}
+    </button>
+  );
+};

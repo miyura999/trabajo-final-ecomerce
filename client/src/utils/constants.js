@@ -29,18 +29,14 @@ export const ORDER_STATUS_LIST = [
 
 // Categorías de productos
 export const PRODUCT_CATEGORIES = [
-  'Laptops',
-  'Smartphones',
-  'Tablets',
-  'Accesorios',
-  'Gaming',
-  'Audio',
-  'Cámaras',
-  'Smartwatch',
-  'Monitores',
-  'Teclados',
-  'Mouse',
-  'Almacenamiento'
+    'Laptops',
+    'Smartphones',
+    'Tablets',
+    'Accesorios',
+    'Gaming',
+    'Audio',
+    'Cámaras',
+    'Smartwatch'
 ];
 
 // Opciones de ordenamiento

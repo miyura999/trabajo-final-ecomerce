@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { Plus, Search, Edit2, Trash2, Eye } from 'lucide-react';
+import axios, { Axios } from 'axios';
+import { Plus, Search, Edit2, Trash2, Eye, PackageSearch, Check } from 'lucide-react';
 import Header from '../../components/layout/Header';
-import Footer from '../../components/layout/Footer';
 import Sidebar from '../../components/layout/Sidebar';
 import Button from '../../components/common/Button';
 import Card from '../../components/common/Card';
@@ -10,6 +9,7 @@ import Modal from '../../components/common/Modal';
 import ProductForm from '../../components/products/ProductForm';
 import { formatPrice } from '../../utils/formatters';
 import api from '../../services/api.service';
+import { toast } from 'react-toastify';
 
 const ManageProductsPage = () => {
   const [products, setProducts] = useState([]);
@@ -23,16 +23,11 @@ const ManageProductsPage = () => {
   const [modalMode, setModalMode] = useState('create'); // 'create' or 'edit'
   const [categories, setCategories] = useState([]);
 
-  // Cargar productos al montar el componente
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
   const fetchProducts = async (filters = {}) => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const params = {};
       if (filters.search) params.search = filters.search;
       if (filters.categoria) params.categoria = filters.categoria;
@@ -40,7 +35,7 @@ const ManageProductsPage = () => {
 
       const response = await api.get('/products', { params });
       setProducts(response.data.data);
-      
+
       // Extraer categorías únicas
       const uniqueCategories = [];
       setCategories(uniqueCategories);
@@ -68,7 +63,7 @@ const ManageProductsPage = () => {
 
   const handleCreate = () => {
     setModalMode('create');
-    setSelectedProduct(null);
+    setSelectedProduct(undefined);
     setShowModal(true);
   };
 
@@ -87,30 +82,30 @@ const ManageProductsPage = () => {
     try {
       await api.delete(`/products/${selectedProduct._id}`);
       setProducts(products.filter(p => p._id !== selectedProduct._id));
+      toast.success('Producto eliminado correctamente', {
+        position: "bottom-right",
+        autoClose: 2000,
+        theme: "colored",
+      });
       setShowDeleteModal(false);
       setSelectedProduct(null);
     } catch (err) {
       console.error('Error deleting product:', err);
-      alert('Error al eliminar el producto');
+      toast.error('Error eliminando producto', {
+        position: "bottom-right",
+        autoClose: 2000,
+        theme: "colored",
+      });
     }
   };
 
-  const handleSubmit = async (formData) => {
-    try {
-      if (modalMode === 'create') {
-        const response = await axios.post('/products', formData);
-        setProducts([...products, response.data]);
-      } else {
-        const response = await axios.put(`/products/${selectedProduct._id}`, formData);
-        setProducts(products.map(p =>
-          p._id === selectedProduct._id ? response.data : p
-        ));
-      }
+  const handleSubmit = async () => {
+    try{
+      fetchProducts()
       setShowModal(false);
       setSelectedProduct(null);
     } catch (err) {
       console.error('Error saving product:', err);
-      alert('Error al guardar el producto');
     }
   };
 
@@ -132,11 +127,11 @@ const ManageProductsPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Sidebar />
-      
+
       <div className="flex-1">
         <Header />
-        
-        <div className="container mx-auto px-6 py-8">
+
+        <div className="container mx-auto px-6 py-6">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
             <div>
@@ -168,7 +163,7 @@ const ManageProductsPage = () => {
                     {loading ? '...' : products.length}
                   </p>
                 </div>
-                <span className="text-3xl">📦</span>
+                <PackageSearch />
               </div>
             </Card>
             <Card>
@@ -179,7 +174,7 @@ const ManageProductsPage = () => {
                     {loading ? '...' : products.filter(p => p.estado === 'disponible').length}
                   </p>
                 </div>
-                <span className="text-3xl">✅</span>
+                <Check />
               </div>
             </Card>
             <Card>
@@ -208,16 +203,6 @@ const ManageProductsPage = () => {
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
-              <select
-                value={filterCategory}
-                onChange={(e) => setFilterCategory(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                <option value="">Todas las categorías</option>
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
             </div>
           </Card>
 
@@ -235,7 +220,7 @@ const ManageProductsPage = () => {
                 </Button>
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto overflow-y-auto max-h-[380px]">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-gray-200">
@@ -251,7 +236,7 @@ const ManageProductsPage = () => {
                     {filteredProducts.map((product) => {
                       const stockStatus = getStockStatus(product.stock);
                       const estadoInfo = getEstadoLabel(product.estado);
-                      
+
                       return (
                         <tr key={product._id} className="border-b border-gray-100 hover:bg-gray-50 transition">
                           <td className="py-4 px-4">
@@ -326,16 +311,10 @@ const ManageProductsPage = () => {
                 <p className="text-sm text-gray-600">
                   Mostrando {filteredProducts.length} de {products.length} productos
                 </p>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm">Anterior</Button>
-                  <Button variant="outline" size="sm">Siguiente</Button>
-                </div>
               </div>
             )}
           </Card>
         </div>
-
-        <Footer />
       </div>
 
       {/* Modal de crear/editar producto */}
@@ -346,6 +325,7 @@ const ManageProductsPage = () => {
         size="lg"
       >
         <ProductForm
+          mode={modalMode === 'create' ? 'crear' : 'editar'}
           initialData={selectedProduct}
           onSubmit={handleSubmit}
           onCancel={() => setShowModal(false)}

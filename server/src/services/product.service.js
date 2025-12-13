@@ -38,15 +38,7 @@ class ProductService {
     return product;
   }
 
-  async createProduct(productData, imageFile) {
-    // Si hay imagen subida, usar la URL de Cloudinary
-    if (imageFile) {
-      productData.imagen = {
-        url: imageFile.path,
-        publicId: imageFile.filename
-      };
-    }
-
+  async createProduct(productData) {
     const product = await Product.create(productData);
     return product;
   }

@@ -17,7 +17,7 @@ class AuthController {
       const result = await authService.login(email, password);
       return successResponse(res, 200, 'Login exitoso', result);
     } catch (error) {
-      return errorResponse(res, 401, error.message);
+      return errorResponse(res, 200, error.message);
     }
   }
 

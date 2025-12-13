@@ -3,7 +3,6 @@ const router = express.Router();
 const productController = require('../controllers/product.controller');
 const authenticate = require('../middlewares/auth.middleware');
 const authorize = require('../middlewares/roles.middleware');
-const upload = require('../middlewares/upload.middleware');
 const { createProductValidator, updateProductValidator, productIdValidator } = require('../validators/product.validator');
 const validateRequest = require('../middlewares/validation.middleware');
 
@@ -16,7 +15,6 @@ router.post(
     '/',
     authenticate,
     authorize('admin'),
-    upload.single('imagen'), // Campo 'imagen' en el form-data
     createProductValidator,
     validateRequest,
     productController.createProduct
@@ -26,7 +24,6 @@ router.put(
     '/:id',
     authenticate,
     authorize('admin'),
-    upload.single('imagen'),
     updateProductValidator,
     validateRequest,
     productController.updateProduct

@@ -8,7 +8,6 @@ import { useCart } from '../../hooks/useCart';
 import { PRODUCT_CATEGORIES, SORT_OPTIONS } from '../../utils/constants';
 import axios from 'axios';
 import api from '../../services/api.service';
-
 const ProductsPage = () => {
   const { addToCart } = useCart();
 
@@ -48,8 +47,6 @@ const ProductsPage = () => {
 
     return () => clearTimeout(delay);
   }, [searchTerm, selectedCategory, sortBy]);
-
-  const handleAddToCart = (product) => addToCart(product);
 
   const clearFilters = () => {
     setSearchTerm('');
@@ -184,7 +181,7 @@ const ProductsPage = () => {
 
             <ProductList
               products={products}
-              onAddToCart={handleAddToCart}
+              onAddToCart={addToCart}
               loading={loading}
             />
           </main>

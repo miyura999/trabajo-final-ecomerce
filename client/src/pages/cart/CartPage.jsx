@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { json, useNavigate } from 'react-router-dom';
 import { ShoppingBag, ArrowLeft, Trash2 } from 'lucide-react';
 import Header from '../../components/layout/Header';
 import Footer from '../../components/layout/Footer';
@@ -100,7 +100,7 @@ const CartPage = () => {
           <div className="lg:col-span-2 space-y-4">
             {cartItems.map((item) => (
               <CartItem
-                key={item.id}
+                key={item._id}
                 item={item}
                 onUpdateQuantity={updateQuantity}
                 onRemove={removeFromCart}

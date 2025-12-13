@@ -37,7 +37,8 @@ const Sidebar = () => {
   };
 
   return (
-    <aside className="w-64 bg-white shadow-lg h-screen max-h-screen overflow-hidden">
+    <aside className="w-64 bg-white shadow-lg h-screen flex flex-col overflow-hidden">
+
 
       <div className="p-6">
         <h2 className="text-2xl font-bold text-gray-800 mb-6">Panel Admin</h2>

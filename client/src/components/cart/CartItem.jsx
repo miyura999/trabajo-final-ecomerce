@@ -2,8 +2,8 @@ import React from 'react';
 import { Trash2, Plus, Minus } from 'lucide-react';
 import Button from '../common/Button';
 
-const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
-  const { id, name, price, image, quantity, stock } = item;
+const CartItem = ({ item, onUpdateQuantity, onRemove, key }) => {
+  const { _id, nombre, precio, imagen, quantity, stock } = item;
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('es-CO', {
@@ -15,25 +15,27 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
 
   const handleIncrement = () => {
     if (quantity < stock) {
-      onUpdateQuantity(id, quantity + 1);
+      onUpdateQuantity(_id, quantity + 1);
     }
   };
 
   const handleDecrement = () => {
     if (quantity > 1) {
-      onUpdateQuantity(id, quantity - 1);
+      onUpdateQuantity(_id, quantity - 1);
     }
   };
 
-  const subtotal = price * quantity;
+  const subtotal = precio * quantity;
 
   return (
-    <div className="flex gap-4 bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+    <div
+      key={key}
+      className="flex gap-4 bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow">
       {/* Imagen del producto */}
       <div className="w-24 h-24 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
         <img
-          src={image || '/placeholder-product.jpg'}
-          alt={name}
+          src={imagen || '/placeholder-product.jpg'}
+          alt={nombre}
           className="w-full h-full object-cover"
         />
       </div>
@@ -41,9 +43,9 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
       {/* Información del producto */}
       <div className="flex-1 flex flex-col justify-between">
         <div>
-          <h3 className="font-semibold text-gray-800 mb-1">{name}</h3>
+          <h3 className="font-semibold text-gray-800 mb-1">{nombre}</h3>
           <p className="text-lg font-bold text-indigo-600">
-            {formatPrice(price)}
+            {formatPrice(precio)}
           </p>
         </div>
 
@@ -57,11 +59,11 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
             >
               <Minus className="w-4 h-4" />
             </button>
-            
+
             <span className="px-4 py-2 font-semibold min-w-[3rem] text-center">
               {quantity}
             </span>
-            
+
             <button
               onClick={handleIncrement}
               disabled={quantity >= stock}
@@ -84,7 +86,7 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => onRemove(id)}
+          onClick={() => onRemove(_id)}
           className="text-red-600 hover:text-red-700 hover:bg-red-50"
         >
           <Trash2 className="w-5 h-5" />

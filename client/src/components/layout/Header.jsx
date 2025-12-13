@@ -15,7 +15,7 @@ const Header = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate('/');
     setMobileMenuOpen(false);
   };
 
