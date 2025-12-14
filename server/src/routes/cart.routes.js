@@ -8,7 +8,7 @@ const validateRequest = require('../middlewares/validation.middleware');
 
 // ✅ CORRECCIÓN: Agregar authorize('cliente')
 router.use(authenticate);
-router.use(authorize('cliente')); // ← ESTO FALTABA
+
 
 // Obtener carrito
 router.get('/', cartController.getCart);

@@ -1,19 +1,138 @@
-import React, { useState } from 'react';
-import { Filter } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Package, ShoppingBag, Loader } from 'lucide-react';
 import Header from '../../components/layout/Header';
 import Footer from '../../components/layout/Footer';
-import OrderList from '../../components/orders/OrderList';
-import { useOrders } from '../../hooks/useOrders';
-import { ORDER_STATUS_LIST } from '../../utils/constants';
+import OrderCard from '../../components/orders/OrderCard';
+import Button from '../../components/common/Button';
+import axios from 'axios';
+import { toast } from 'react-toastify';
 
-const MyOrdersPage = () => {
-  const { orders, loading } = useOrders();
-  const [selectedStatus, setSelectedStatus] = useState('');
+const OrdersPage = () => {
+  const navigate = useNavigate();
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const filteredOrders = selectedStatus
-    ? orders.filter(order => order.status === selectedStatus)
-    : orders;
+  useEffect(() => {
+    fetchOrders();
+  }, []);
 
+  const fetchOrders = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await axios.get('/orders');
+      
+      if (response.data.success) {
+        // Transformar datos del backend al formato del frontend
+        const transformedOrders = response.data.data.map(order => ({
+          id: order._id,
+          orderNumber: `#${order._id.slice(-8).toUpperCase()}`,
+          date: order.createdAt,
+          status: order.estado,
+          total: order.total,
+          items: order.items.map(item => ({
+            name: item.nombreProducto,
+            quantity: item.cantidad,
+            price: item.precio,
+            image: item.imagenProducto
+          })),
+          direccionEnvio: order.direccionEnvio,
+          telefono: order.telefono
+        }));
+        
+        setOrders(transformedOrders);
+        console.log('✅ Órdenes cargadas:', transformedOrders.length);
+      }
+    } catch (error) {
+      console.error('❌ Error al cargar órdenes:', error);
+      setError(error.response?.data?.message || 'Error al cargar las órdenes');
+      
+      toast.error('No se pudieron cargar las órdenes', {
+        position: "bottom-right",
+        autoClose: 3000,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Estado de carga
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="container mx-auto px-4 py-16">
+          <div className="flex flex-col items-center justify-center">
+            <Loader className="w-12 h-12 text-indigo-600 animate-spin mb-4" />
+            <p className="text-gray-600">Cargando tus pedidos...</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Estado de error
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="container mx-auto px-4 py-16">
+          <div className="flex flex-col items-center justify-center text-center max-w-md mx-auto">
+            <div className="bg-red-100 rounded-full p-6 mb-6">
+              <Package className="w-16 h-16 text-red-600" />
+            </div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-3">
+              Error al cargar pedidos
+            </h2>
+            <p className="text-gray-600 mb-8">{error}</p>
+            <Button
+              variant="primary"
+              onClick={fetchOrders}
+            >
+              Reintentar
+            </Button>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Sin órdenes
+  if (orders.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="container mx-auto px-4 py-16">
+          <div className="flex flex-col items-center justify-center text-center max-w-md mx-auto">
+            <div className="bg-indigo-100 rounded-full p-6 mb-6">
+              <ShoppingBag className="w-16 h-16 text-indigo-600" />
+            </div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-3">
+              No tienes pedidos aún
+            </h2>
+            <p className="text-gray-600 mb-8">
+              Cuando realices tu primera compra, aparecerá aquí
+            </p>
+            <Button
+              variant="primary"
+              size="lg"
+              onClick={() => navigate('/products')}
+            >
+              Explorar Productos
+            </Button>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Lista de órdenes
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -25,110 +144,35 @@ const MyOrdersPage = () => {
             Mis Pedidos
           </h1>
           <p className="text-gray-600">
-            Revisa el estado de tus pedidos y su historial
+            Tienes {orders.length} {orders.length === 1 ? 'pedido' : 'pedidos'}
           </p>
         </div>
 
-        {/* Filtros */}
-        <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <div className="flex items-center gap-2 text-gray-700">
-              <Filter className="w-5 h-5" />
-              <span className="font-semibold">Filtrar por estado:</span>
+        {/* Filtros y ordenamiento (opcional) */}
+        <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Package className="w-5 h-5 text-indigo-600" />
+              <span className="font-semibold text-gray-700">
+                Historial de Pedidos
+              </span>
             </div>
-            
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => setSelectedStatus('')}
-                className={`
-                  px-4 py-2 rounded-lg font-medium transition-all
-                  ${selectedStatus === ''
-                    ? 'bg-indigo-600 text-white shadow-md'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }
-                `}
-              >
-                Todos
-              </button>
-              
-              {ORDER_STATUS_LIST.map((status) => (
-                <button
-                  key={status.value}
-                  onClick={() => setSelectedStatus(status.value)}
-                  className={`
-                    px-4 py-2 rounded-lg font-medium transition-all
-                    ${selectedStatus === status.value
-                      ? 'bg-indigo-600 text-white shadow-md'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }
-                  `}
-                >
-                  {status.label}
-                </button>
-              ))}
-            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={fetchOrders}
+            >
+              Actualizar
+            </Button>
           </div>
         </div>
 
-        {/* Estadísticas rápidas */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm mb-1">Total Pedidos</p>
-                <p className="text-3xl font-bold text-gray-900">{orders.length}</p>
-              </div>
-              <div className="bg-indigo-100 rounded-full p-3">
-                <span className="text-2xl">📦</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm mb-1">Pendientes</p>
-                <p className="text-3xl font-bold text-yellow-600">
-                  {orders.filter(o => o.status === 'Pendiente').length}
-                </p>
-              </div>
-              <div className="bg-yellow-100 rounded-full p-3">
-                <span className="text-2xl">⏳</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm mb-1">En Camino</p>
-                <p className="text-3xl font-bold text-purple-600">
-                  {orders.filter(o => o.status === 'Enviando').length}
-                </p>
-              </div>
-              <div className="bg-purple-100 rounded-full p-3">
-                <span className="text-2xl">🚚</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm mb-1">Entregados</p>
-                <p className="text-3xl font-bold text-green-600">
-                  {orders.filter(o => o.status === 'Entregado').length}
-                </p>
-              </div>
-              <div className="bg-green-100 rounded-full p-3">
-                <span className="text-2xl">✅</span>
-              </div>
-            </div>
-          </div>
+        {/* Grid de órdenes */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {orders.map((order) => (
+            <OrderCard key={order.id} order={order} />
+          ))}
         </div>
-
-        {/* Lista de pedidos */}
-        <OrderList orders={filteredOrders} loading={loading} />
       </div>
 
       <Footer />
@@ -136,4 +180,4 @@ const MyOrdersPage = () => {
   );
 };
 
-export default MyOrdersPage;
+export default OrdersPage;

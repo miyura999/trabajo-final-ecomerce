@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { json, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ShoppingBag, ArrowLeft, Trash2 } from 'lucide-react';
 import Header from '../../components/layout/Header';
 import Footer from '../../components/layout/Footer';
@@ -7,33 +7,93 @@ import CartItem from '../../components/cart/CartItem';
 import CartSummary from '../../components/cart/CartSummary';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
+import CheckoutModal from '../../components/cart/CheckoutModal'; // ✅ IMPORTAR AQUÍ
 import { useCart } from '../../hooks/useCart';
+import { toast } from 'react-toastify';
+import axios from 'axios';
 
 const CartPage = () => {
   const navigate = useNavigate();
-  const { cartItems, updateQuantity, removeFromCart, clearCart, getTotal, refreshCart } = useCart();
+  const { 
+    cartItems, 
+    updateQuantity, 
+    removeFromCart, 
+    clearCart, 
+    getTotal, 
+    refreshCart, 
+    setCartItems 
+  } = useCart();
+  
   const [showClearModal, setShowClearModal] = useState(false);
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false); // ✅ ESTADO PARA MODAL
   const [loading, setLoading] = useState(false);
 
-
   useEffect(() => {
-    refreshCart()
-  }, [])
+    refreshCart();
+    return () => {
+      setCartItems([]);
+    };
+  }, []);
+
+  // ✅ FUNCIÓN PARA ABRIR MODAL DE CHECKOUT
   const handleCheckout = () => {
+    if (cartItems.length === 0) {
+      toast.warning('Tu carrito está vacío', {
+        position: "bottom-right",
+        autoClose: 2000,
+      });
+      return;
+    }
+    setShowCheckoutModal(true);
+  };
+
+  // ✅ FUNCIÓN PARA CREAR LA ORDEN
+  const handleSubmitOrder = async (orderData) => {
     setLoading(true);
-    // Simulación de proceso de checkout
-    setTimeout(() => {
+    try {
+      const response = await axios.post('/orders', orderData);
+      
+      if (response.data.success) {
+        toast.success('¡Pedido creado exitosamente!', {
+          position: "bottom-right",
+          autoClose: 3000,
+        });
+        
+        // Limpiar carrito local
+        setCartItems([]);
+        
+        // Cerrar modal
+        setShowCheckoutModal(false);
+        
+        // Redirigir a página de órdenes
+        setTimeout(() => {
+          navigate('/my-orders'); // o '/profile/orders' según tu estructura
+        }, 1500);
+      }
+    } catch (error) {
+      console.error('Error al crear la orden:', error);
+      
+      const errorMessage = error.response?.data?.message || 'Error al crear el pedido';
+      
+      toast.error(errorMessage, {
+        position: "bottom-right",
+        autoClose: 3000,
+      });
+    } finally {
       setLoading(false);
-      navigate('/my-orders');
-      clearCart();
-    }, 2000);
+    }
   };
 
   const handleClearCart = () => {
     clearCart();
     setShowClearModal(false);
+    toast.success('Carrito vaciado', {
+      position: "bottom-right",
+      autoClose: 2000,
+    });
   };
 
+  // Pantalla de carrito vacío
   if (cartItems.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -104,7 +164,7 @@ const CartPage = () => {
           <div className="lg:col-span-2 space-y-4">
             {cartItems.map((item) => (
               <CartItem
-                key={item._id}
+                key={item._id || item.productoId}
                 item={item}
                 onUpdateQuantity={updateQuantity}
                 onRemove={removeFromCart}
@@ -209,6 +269,15 @@ const CartPage = () => {
           </div>
         </div>
       </Modal>
+
+      {/* ✅ MODAL DE CHECKOUT - AGREGAR AQUÍ */}
+      <CheckoutModal
+        isOpen={showCheckoutModal}
+        onClose={() => setShowCheckoutModal(false)}
+        onSubmit={handleSubmitOrder}
+        loading={loading}
+        total={getTotal()}
+      />
     </div>
   );
 };

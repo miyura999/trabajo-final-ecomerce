@@ -172,6 +172,7 @@ export const CartProvider = ({ children }) => {
 
   const value = {
     cartItems,
+    setCartItems,
     loading,
     addToCart,
     removeFromCart,

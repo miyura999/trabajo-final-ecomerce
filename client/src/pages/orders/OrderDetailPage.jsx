@@ -1,59 +1,114 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, Phone, Mail, Package, Truck, CreditCard } from 'lucide-react';
+import { ArrowLeft, MapPin, Phone, Mail, Package, Truck, CreditCard, AlertCircle } from 'lucide-react';
 import Header from '../../components/layout/Header';
 import Footer from '../../components/layout/Footer';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import { OrderStatusTimeline } from '../../components/orders/OrderStatus';
-import { useOrders } from '../../hooks/useOrders';
 import { formatPrice, formatDate } from '../../utils/formatters';
+import axios from 'axios';
 
 const OrderDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { getOrderById } = useOrders();
+  
+  // ==================== ESTADO ====================
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    // Simular carga de pedido
-    setTimeout(() => {
-      const mockOrder = {
-        id: parseInt(id),
-        orderNumber: 'ORD-2025-001',
-        date: '2025-12-01',
-        status: 'En Producción',
-        total: 2999000,
-        subtotal: 2999000,
-        shipping: 0,
-        tax: 570810,
-        items: [
-          {
-            id: 1,
-            name: 'Laptop Gaming Pro X1',
-            price: 2999000,
-            quantity: 1,
-            image: 'https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=300'
-          }
-        ],
-        shippingAddress: {
-          name: 'Juan Pérez',
-          address: 'Calle 10 #20-30',
-          city: 'Medellín',
-          state: 'Antioquia',
-          zipCode: '050001',
-          phone: '3001234567'
+  // ==================== MAPEO DE ESTADOS ====================
+  const statusMap = {
+    'pendiente': 'Pendiente',
+    'en_produccion': 'En Producción',
+    'enviando': 'Enviando',
+    'entregado': 'Entregado',
+    'cancelado': 'Cancelado'
+  };
+
+  // ==================== FUNCIONES DE API ====================
+  const fetchOrderDetail = useCallback(async () => {
+    if (!id) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await axios.get(`/orders/${id}`);
+      const orderData = response.data.data;
+
+      // Transformar datos del backend al formato del frontend
+      const transformedOrder = {
+        id: orderData._id,
+        orderNumber: `ORD-${new Date(orderData.createdAt).getFullYear()}-${orderData._id.slice(-6).toUpperCase()}`,
+        date: orderData.createdAt,
+        status: statusMap[orderData.estado] || orderData.estado,
+        backendStatus: orderData.estado,
+        
+        // Items del pedido
+        items: orderData.items.map(item => ({
+          id: item.productoId,
+          name: item.nombreProducto,
+          price: item.precio,
+          quantity: item.cantidad,
+          subtotal: item.subtotal,
+          image: item.imagenProducto || 'https://via.placeholder.com/300'
+        })),
+        
+        // Totales
+        subtotal: orderData.total, // El total ya incluye todo
+        shipping: 0, // Envío gratis
+        tax: Math.round(orderData.total * 0.19), // IVA 19%
+        total: orderData.total,
+        
+        // Información del usuario
+        customer: {
+          id: orderData.usuario?._id,
+          name: orderData.usuario?.nombre || 'Usuario',
+          email: orderData.usuario?.email || '',
+          phone: orderData.usuario?.telefono || orderData.telefono
         },
-        paymentMethod: 'Tarjeta de Crédito',
-        trackingNumber: 'TRK123456789',
-        estimatedDelivery: '2025-12-10'
+        
+        // Dirección de envío
+        shippingAddress: {
+          name: orderData.usuario?.nombre || 'Usuario',
+          address: orderData.direccionEnvio?.calle || '',
+          city: orderData.direccionEnvio?.ciudad || '',
+          state: orderData.direccionEnvio?.pais || '',
+          zipCode: orderData.direccionEnvio?.codigoPostal || '',
+          phone: orderData.telefono
+        },
+        
+        // Información adicional
+        paymentMethod: 'Tarjeta de Crédito', // Por defecto
+        trackingNumber: orderData.estado === 'enviando' || orderData.estado === 'entregado' 
+          ? `TRK${orderData._id.slice(-9).toUpperCase()}` 
+          : null,
+        estimatedDelivery: orderData.estado === 'enviando' 
+          ? new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString() 
+          : null,
+        
+        // Datos originales
+        rawOrder: orderData
       };
-      setOrder(mockOrder);
-      setLoading(false);
-    }, 800);
-  }, [id]);
 
+      setOrder(transformedOrder);
+    } catch (err) {
+      console.error('Error al cargar detalle de orden:', err);
+      const errorMessage = err.response?.data?.message || err.message || 'Error al cargar el pedido';
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }, [id]); // ← Dependencia: se recrea cuando cambia el ID
+
+  // ==================== EFECTOS ====================
+  useEffect(() => {
+    fetchOrderDetail();
+  }, [fetchOrderDetail]); // ← Ejecutar cuando cambie fetchOrderDetail
+
+  // ==================== RENDER: LOADING ====================
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -70,24 +125,73 @@ const OrderDetailPage = () => {
     );
   }
 
-  if (!order) {
+  // ==================== RENDER: ERROR ====================
+  if (error) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
         <div className="container mx-auto px-4 py-8">
-          <p>Pedido no encontrado</p>
+          <div className="mb-8">
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-2 text-gray-600 hover:text-indigo-600 transition mb-4"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              Volver
+            </button>
+          </div>
+          
+          <Card>
+            <div className="text-center py-12">
+              <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Error al cargar el pedido
+              </h2>
+              <p className="text-gray-600 mb-6">{error}</p>
+              <Button onClick={fetchOrderDetail}>
+                Intentar de nuevo
+              </Button>
+            </div>
+          </Card>
         </div>
         <Footer />
       </div>
     );
   }
 
+  // ==================== RENDER: SIN ORDEN ====================
+  if (!order) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="container mx-auto px-4 py-8">
+          <Card>
+            <div className="text-center py-12">
+              <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Pedido no encontrado
+              </h2>
+              <p className="text-gray-600 mb-6">
+                No se pudo encontrar el pedido solicitado
+              </p>
+              <Button onClick={() => navigate(-1)}>
+                Volver
+              </Button>
+            </div>
+          </Card>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  // ==================== RENDER: PRINCIPAL ====================
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
 
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
+        {/* ========== HEADER ========== */}
         <div className="mb-8">
           <button
             onClick={() => navigate(-1)}
@@ -103,17 +207,17 @@ const OrderDetailPage = () => {
                 Pedido {order.orderNumber}
               </h1>
               <p className="text-gray-600">
-                Realizado el {formatDate(order.date)}
+                Realizado el {formatDate(order.date, 'long')}
               </p>
             </div>
             
-            <Button variant="outline">
+            <Button variant="outline" onClick={() => window.print()}>
               Descargar Factura
             </Button>
           </div>
         </div>
 
-        {/* Timeline de estado */}
+        {/* ========== TIMELINE DE ESTADO ========== */}
         <Card className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">
             Estado del Pedido
@@ -128,9 +232,11 @@ const OrderDetailPage = () => {
                   <p className="font-semibold text-blue-900">
                     Número de rastreo: {order.trackingNumber}
                   </p>
-                  <p className="text-sm text-blue-700">
-                    Entrega estimada: {formatDate(order.estimatedDelivery)}
-                  </p>
+                  {order.estimatedDelivery && (
+                    <p className="text-sm text-blue-700">
+                      Entrega estimada: {formatDate(order.estimatedDelivery, 'long')}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -138,13 +244,13 @@ const OrderDetailPage = () => {
         </Card>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Productos y detalles */}
+          {/* ========== COLUMNA IZQUIERDA: PRODUCTOS Y DETALLES ========== */}
           <div className="lg:col-span-2 space-y-6">
             {/* Productos */}
             <Card>
               <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                 <Package className="w-6 h-6" />
-                Productos
+                Productos ({order.items.length})
               </h2>
               
               <div className="space-y-4">
@@ -155,6 +261,9 @@ const OrderDetailPage = () => {
                         src={item.image}
                         alt={item.name}
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.src = 'https://via.placeholder.com/300?text=Producto';
+                        }}
                       />
                     </div>
                     
@@ -166,14 +275,14 @@ const OrderDetailPage = () => {
                         Cantidad: {item.quantity}
                       </p>
                       <p className="text-lg font-bold text-indigo-600">
-                        {formatPrice(item.price)}
+                        {formatPrice(item.price)} c/u
                       </p>
                     </div>
                     
                     <div className="text-right">
                       <p className="text-sm text-gray-600 mb-1">Subtotal</p>
                       <p className="text-lg font-bold text-gray-900">
-                        {formatPrice(item.price * item.quantity)}
+                        {formatPrice(item.subtotal)}
                       </p>
                     </div>
                   </div>
@@ -193,21 +302,49 @@ const OrderDetailPage = () => {
                   <p className="font-semibold text-gray-900">
                     {order.shippingAddress.name}
                   </p>
+                  {order.shippingAddress.address && (
+                    <p className="text-gray-600">
+                      {order.shippingAddress.address}
+                    </p>
+                  )}
                   <p className="text-gray-600">
-                    {order.shippingAddress.address}
+                    {order.shippingAddress.city}
+                    {order.shippingAddress.state && `, ${order.shippingAddress.state}`}
                   </p>
-                  <p className="text-gray-600">
-                    {order.shippingAddress.city}, {order.shippingAddress.state}
-                  </p>
-                  <p className="text-gray-600">
-                    {order.shippingAddress.zipCode}
-                  </p>
+                  {order.shippingAddress.zipCode && (
+                    <p className="text-gray-600">
+                      {order.shippingAddress.zipCode}
+                    </p>
+                  )}
                 </div>
                 
-                <div className="flex items-center gap-2 text-gray-600 pt-3 border-t">
-                  <Phone className="w-4 h-4" />
-                  <span>{order.shippingAddress.phone}</span>
+                {order.shippingAddress.phone && (
+                  <div className="flex items-center gap-2 text-gray-600 pt-3 border-t">
+                    <Phone className="w-4 h-4" />
+                    <span>{order.shippingAddress.phone}</span>
+                  </div>
+                )}
+              </div>
+            </Card>
+
+            {/* Información del cliente */}
+            <Card>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <Mail className="w-6 h-6" />
+                Información del Cliente
+              </h2>
+              
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-gray-600">
+                  <Mail className="w-4 h-4" />
+                  <span>{order.customer.email}</span>
                 </div>
+                {order.customer.phone && (
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Phone className="w-4 h-4" />
+                    <span>{order.customer.phone}</span>
+                  </div>
+                )}
               </div>
             </Card>
 
@@ -234,18 +371,18 @@ const OrderDetailPage = () => {
             </Card>
           </div>
 
-          {/* Resumen del pedido */}
+          {/* ========== COLUMNA DERECHA: RESUMEN ========== */}
           <div className="lg:col-span-1">
             <Card className="sticky top-24">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                Resumen
+                Resumen del Pedido
               </h2>
               
               <div className="space-y-4">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal</span>
                   <span className="font-semibold">
-                    {formatPrice(order.subtotal)}
+                    {formatPrice(order.items.reduce((sum, item) => sum + item.subtotal, 0))}
                   </span>
                 </div>
                 
@@ -257,13 +394,6 @@ const OrderDetailPage = () => {
                     ) : (
                       formatPrice(order.shipping)
                     )}
-                  </span>
-                </div>
-                
-                <div className="flex justify-between text-gray-600">
-                  <span>IVA (19%)</span>
-                  <span className="font-semibold">
-                    {formatPrice(order.tax)}
                   </span>
                 </div>
                 
@@ -281,10 +411,16 @@ const OrderDetailPage = () => {
               
               {/* Acciones */}
               <div className="mt-6 space-y-3">
-                <Button variant="primary" fullWidth>
-                  Rastrear Pedido
-                </Button>
-                <Button variant="outline" fullWidth>
+                {order.trackingNumber && (
+                  <Button variant="primary" fullWidth>
+                    Rastrear Pedido
+                  </Button>
+                )}
+                <Button 
+                  variant="outline" 
+                  fullWidth
+                  onClick={() => window.location.href = 'mailto:soporte@techstore.com'}
+                >
                   Contactar Soporte
                 </Button>
               </div>
@@ -297,11 +433,21 @@ const OrderDetailPage = () => {
                 <div className="space-y-2 text-sm text-gray-600">
                   <div className="flex items-center gap-2">
                     <Mail className="w-4 h-4" />
-                    <span>soporte@techstore.com</span>
+                    <a 
+                      href="mailto:soporte@techstore.com"
+                      className="hover:text-indigo-600 transition"
+                    >
+                      soporte@techstore.com
+                    </a>
                   </div>
                   <div className="flex items-center gap-2">
                     <Phone className="w-4 h-4" />
-                    <span>+57 300 123 4567</span>
+                    <a 
+                      href="tel:+573001234567"
+                      className="hover:text-indigo-600 transition"
+                    >
+                      +57 300 123 4567
+                    </a>
                   </div>
                 </div>
               </div>

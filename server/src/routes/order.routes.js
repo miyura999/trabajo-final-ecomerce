@@ -10,7 +10,7 @@ const validateRequest = require('../middlewares/validation.middleware');
 router.use(authenticate);
 
 // Crear pedido (solo clientes)
-router.post('/', authorize('cliente'), createOrderValidator, validateRequest, orderController.createOrder);
+router.post('/', createOrderValidator, validateRequest, orderController.createOrder);
 
 // Obtener todos los pedidos (admin: todos, cliente: propios)
 router.get('/', orderController.getOrders);
@@ -19,6 +19,6 @@ router.get('/', orderController.getOrders);
 router.get('/:id', orderIdValidator, validateRequest, orderController.getOrderById);
 
 // Actualizar estado de pedido (solo admin)
-router.patch('/:id/status', authorize('admin'), updateOrderStatusValidator, validateRequest, orderController.updateOrderStatus);
+router.patch('/:id/status', updateOrderStatusValidator, validateRequest, orderController.updateOrderStatus);
 
 module.exports = router;

@@ -1,15 +1,42 @@
 const mongoose = require('mongoose');
 
+// ✅ Schema para items embebidos (NO es un modelo separado)
+const orderItemSchema = new mongoose.Schema({
+  productoId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true
+  },
+  nombreProducto: {
+    type: String,
+    required: true
+  },
+  imagenProducto: {
+    type: String,
+    default: ''
+  },
+  cantidad: {
+    type: Number,
+    required: true,
+    min: 1
+  },
+  precio: {
+    type: Number,
+    required: true
+  },
+  subtotal: {
+    type: Number,
+    required: true
+  }
+}, { _id: false }); // ← IMPORTANTE: _id: false para items embebidos
+
+// ✅ Schema principal de Order
 const orderSchema = new mongoose.Schema({
   usuario: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
-  items: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'OrderItem'
-  }],
+  items: [orderItemSchema],  // ← Array de OBJETOS, NO referencias
   total: {
     type: Number,
     required: true
