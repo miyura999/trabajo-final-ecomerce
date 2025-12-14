@@ -9,15 +9,18 @@ import Modal from '../../components/common/Modal';
 import OrderStatus from '../../components/orders/OrderStatus';
 import { ORDER_STATUS_LIST } from '../../utils/constants';
 import { formatPrice, formatDate } from '../../utils/formatters';
-import orderService from '../../services/order.service';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+
 
 const ManageOrdersPage = () => {
-  // ==================== ESTADO ====================
+
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const navigate = useNavigate()
   
   // Modal de cambio de estado
   const [showStatusModal, setShowStatusModal] = useState(false);
@@ -61,10 +64,10 @@ const ManageOrdersPage = () => {
       setLoading(true);
       setError(null);
       
-      const response = await orderService.getOrders();
+      const response = await axios.get('/orders');
       
       // Transformar datos del backend al formato del frontend
-      const transformedOrders = response.data.map(order => ({
+      const transformedOrders = response.data.data.map(order => ({
         id: order._id,
         orderNumber: `ORD-${new Date(order.createdAt).getFullYear()}-${order._id.slice(-6).toUpperCase()}`,
         customer: order.usuario?.nombre || 'Usuario desconocido',
@@ -98,7 +101,7 @@ const ManageOrdersPage = () => {
       setError(null);
 
       const backendStatus = reverseStatusMap[newStatus];
-      await orderService.updateOrderStatus(selectedOrder.id, backendStatus);
+      await axios.get(`/orders/${selectedOrder.id}`, {estado: backendStatus});
 
       // Actualizar la lista local
       setOrders(prevOrders =>
@@ -132,7 +135,7 @@ const ManageOrdersPage = () => {
   };
 
   const handleViewDetails = (orderId) => {
-    window.location.href = `/admin/orders/${orderId}`;
+    navigate(`/orders/${orderId}`);
   };
 
   // ==================== FILTROS Y BÚSQUEDA ====================
