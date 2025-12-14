@@ -6,6 +6,7 @@ const authorize = (...allowedRoles) => {
       return errorResponse(res, 401, 'Usuario no autenticado');
     }
 
+    // ✅ Verifica que el rol del usuario esté en la lista permitida
     if (!allowedRoles.includes(req.user.role)) {
       return errorResponse(res, 403, 'No tienes permisos para realizar esta acción');
     }

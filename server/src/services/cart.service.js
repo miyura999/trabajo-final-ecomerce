@@ -9,7 +9,6 @@ class CartService {
         path: 'items',
         populate: { path: 'producto' }
       });
-
     if (!cart) {
       cart = await Cart.create({ usuario: userId, items: [], total: 0 });
     }
