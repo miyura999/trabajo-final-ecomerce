@@ -236,9 +236,6 @@ const LoginPage = () => {
                   Recordarme
                 </span>
               </label>
-              <a href="#" className="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
-                ¿Olvidaste tu contraseña?
-              </a>
             </div>
 
             {/* Botón submit */}
