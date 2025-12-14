@@ -2,8 +2,17 @@ import React from 'react';
 import { Trash2, Plus, Minus } from 'lucide-react';
 import Button from '../common/Button';
 
-const CartItem = ({ item, onUpdateQuantity, onRemove, key }) => {
-  const { _id, nombre, precio, imagen, quantity, stock } = item;
+const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
+  // Extraer datos del producto que viene populado
+  const { _id, producto, cantidad, precio, subtotal } = item;
+  
+  // Validar que producto existe (está populado)
+  if (!producto) {
+    console.error('Producto no populado en el item:', item);
+    return null;
+  }
+
+  const { nombre, imagen, stock } = producto;
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('es-CO', {
@@ -14,23 +23,19 @@ const CartItem = ({ item, onUpdateQuantity, onRemove, key }) => {
   };
 
   const handleIncrement = () => {
-    if (quantity < stock) {
-      onUpdateQuantity(_id, quantity + 1);
+    if (cantidad < stock) {
+      onUpdateQuantity(_id, cantidad + 1);
     }
   };
 
   const handleDecrement = () => {
-    if (quantity > 1) {
-      onUpdateQuantity(_id, quantity - 1);
+    if (cantidad > 1) {
+      onUpdateQuantity(_id, cantidad - 1);
     }
   };
 
-  const subtotal = precio * quantity;
-
   return (
-    <div
-      key={key}
-      className="flex gap-4 bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+    <div className="flex gap-4 bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow">
       {/* Imagen del producto */}
       <div className="w-24 h-24 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
         <img
@@ -54,26 +59,24 @@ const CartItem = ({ item, onUpdateQuantity, onRemove, key }) => {
           <div className="flex items-center border border-gray-300 rounded-lg">
             <button
               onClick={handleDecrement}
-              disabled={quantity <= 1}
+              disabled={cantidad <= 1}
               className="p-2 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
               <Minus className="w-4 h-4" />
             </button>
-
             <span className="px-4 py-2 font-semibold min-w-[3rem] text-center">
-              {quantity}
+              {cantidad}
             </span>
-
             <button
               onClick={handleIncrement}
-              disabled={quantity >= stock}
+              disabled={cantidad >= stock}
               className="p-2 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
               <Plus className="w-4 h-4" />
             </button>
           </div>
 
-          {quantity >= stock && (
+          {cantidad >= stock && (
             <span className="text-xs text-orange-600 font-medium">
               Stock máximo
             </span>

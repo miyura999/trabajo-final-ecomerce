@@ -217,53 +217,12 @@ const ProductDetailPage = () => {
                 </Button>
               </div>
 
-              {/* Acciones adicionales */}
-              <div className="flex gap-3 pt-6 border-t">
-                <button className="flex items-center gap-2 text-gray-600 hover:text-red-500 transition">
-                  <Heart className="w-5 h-5" />
-                  <span>Agregar a favoritos</span>
-                </button>
-                <button className="flex items-center gap-2 text-gray-600 hover:text-indigo-600 transition">
-                  <Share2 className="w-5 h-5" />
-                  <span>Compartir</span>
-                </button>
-              </div>
+              
             </Card>
           </div>
         </div>
 
-        {/* Características y especificaciones */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Características */}
-          <Card>
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
-              Características
-            </h2>
-            <ul className="space-y-3">
-              {/* {product.features.map((feature, index) => (
-                <li key={index} className="flex items-start gap-3">
-                  <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                  <span className="text-gray-700">{feature}</span>
-                </li>
-              ))} */}
-            </ul>
-          </Card>
-
-          {/* Especificaciones */}
-          <Card>
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
-              Especificaciones Técnicas
-            </h2>
-            <div className="space-y-4">
-              {/* {product.specifications.map((spec, index) => (
-                <div key={index} className="flex justify-between py-3 border-b last:border-b-0">
-                  <span className="font-semibold text-gray-700">{spec.label}:</span>
-                  <span className="text-gray-600">{spec.value}</span>
-                </div>
-              ))} */}
-            </div>
-          </Card>
-        </div>
+        
       </div>
 
       <Footer />
