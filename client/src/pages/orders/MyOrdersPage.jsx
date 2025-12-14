@@ -44,7 +44,6 @@ const OrdersPage = () => {
         }));
         
         setOrders(transformedOrders);
-        console.log('✅ Órdenes cargadas:', transformedOrders.length);
       }
     } catch (error) {
       console.error('❌ Error al cargar órdenes:', error);

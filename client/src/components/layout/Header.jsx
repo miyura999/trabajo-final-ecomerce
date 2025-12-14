@@ -40,10 +40,15 @@ const Header = () => {
                   Mis Pedidos
                 </Link>
                 {isAdmin && (
+                  <>
                   <Link to="/admin" className="hover:text-indigo-200 transition flex items-center gap-1">
                     <LayoutDashboard className="w-4 h-4" />
                     Admin
                   </Link>
+                  <Link to='/chat' className="hover:text-indigo-200 transition flex items-center gap-1">
+                    Chat
+                  </Link>
+                  </>
                 )}
               </>
             )}
@@ -53,8 +58,8 @@ const Header = () => {
           <div className="hidden md:flex items-center space-x-4">
             {isAuthenticated ? (
               <>
-                <Link 
-                  to="/cart" 
+                <Link
+                  to="/cart"
                   className="relative hover:text-indigo-200 transition p-2"
                 >
                   <ShoppingCart className="w-6 h-6" />
@@ -64,7 +69,7 @@ const Header = () => {
                     </span>
                   )}
                 </Link>
-                
+
                 <div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-700 rounded-lg">
                   <User className="w-5 h-5" />
                   <span className="text-sm">{user?.name || user?.email}</span>
@@ -74,8 +79,8 @@ const Header = () => {
                     </span>
                   )}
                 </div>
-                
-                <button 
+
+                <button
                   onClick={handleLogout}
                   className="hover:text-indigo-200 transition p-2"
                   title="Cerrar sesión"
@@ -85,14 +90,14 @@ const Header = () => {
               </>
             ) : (
               <>
-                <Link 
-                  to="/login" 
+                <Link
+                  to="/login"
                   className="bg-white text-indigo-600 px-4 py-2 rounded-lg font-semibold hover:bg-indigo-50 transition"
                 >
                   Iniciar Sesión
                 </Link>
-                <Link 
-                  to="/register" 
+                <Link
+                  to="/register"
                   className="border-2 border-white px-4 py-2 rounded-lg font-semibold hover:bg-indigo-700 transition"
                 >
                   Registrarse
@@ -102,7 +107,7 @@ const Header = () => {
           </div>
 
           {/* Mobile Menu Button */}
-          <button 
+          <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="md:hidden p-2"
           >
@@ -114,33 +119,33 @@ const Header = () => {
         {mobileMenuOpen && (
           <div className="md:hidden pb-4 border-t border-indigo-500 mt-2 pt-4">
             <nav className="flex flex-col space-y-3">
-              <Link 
-                to="/" 
+              <Link
+                to="/"
                 onClick={() => setMobileMenuOpen(false)}
                 className="hover:text-indigo-200 transition py-2"
               >
                 Inicio
               </Link>
-              <Link 
-                to="/products" 
+              <Link
+                to="/products"
                 onClick={() => setMobileMenuOpen(false)}
                 className="hover:text-indigo-200 transition py-2"
               >
                 Productos
               </Link>
-              
+
               {isAuthenticated ? (
                 <>
-                  <Link 
-                    to="/cart" 
+                  <Link
+                    to="/cart"
                     onClick={() => setMobileMenuOpen(false)}
                     className="hover:text-indigo-200 transition py-2 flex items-center gap-2"
                   >
                     <ShoppingCart className="w-5 h-5" />
                     Carrito ({itemCount})
                   </Link>
-                  <Link 
-                    to="/my-orders" 
+                  <Link
+                    to="/my-orders"
                     onClick={() => setMobileMenuOpen(false)}
                     className="hover:text-indigo-200 transition py-2 flex items-center gap-2"
                   >
@@ -148,8 +153,8 @@ const Header = () => {
                     Mis Pedidos
                   </Link>
                   {isAdmin && (
-                    <Link 
-                      to="/admin" 
+                    <Link
+                      to="/admin"
                       onClick={() => setMobileMenuOpen(false)}
                       className="hover:text-indigo-200 transition py-2 flex items-center gap-2 bg-indigo-700 rounded-lg px-3"
                     >
@@ -170,7 +175,7 @@ const Header = () => {
                         </span>
                       )}
                     </div>
-                    <button 
+                    <button
                       onClick={handleLogout}
                       className="hover:text-indigo-200 transition py-2 flex items-center gap-2 w-full"
                     >
@@ -181,15 +186,15 @@ const Header = () => {
                 </>
               ) : (
                 <div className="flex flex-col gap-2 pt-2">
-                  <Link 
-                    to="/login" 
+                  <Link
+                    to="/login"
                     onClick={() => setMobileMenuOpen(false)}
                     className="bg-white text-indigo-600 px-4 py-2 rounded-lg font-semibold text-center hover:bg-indigo-50 transition"
                   >
                     Iniciar Sesión
                   </Link>
-                  <Link 
-                    to="/register" 
+                  <Link
+                    to="/register"
                     onClick={() => setMobileMenuOpen(false)}
                     className="border-2 border-white px-4 py-2 rounded-lg font-semibold text-center hover:bg-indigo-700 transition"
                   >

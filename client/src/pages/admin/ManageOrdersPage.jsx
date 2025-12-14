@@ -11,6 +11,7 @@ import { ORDER_STATUS_LIST } from '../../utils/constants';
 import { formatPrice, formatDate } from '../../utils/formatters';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 
 const ManageOrdersPage = () => {
@@ -21,7 +22,7 @@ const ManageOrdersPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const navigate = useNavigate()
-  
+
   // Modal de cambio de estado
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -63,9 +64,9 @@ const ManageOrdersPage = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await axios.get('/orders');
-      
+
       // Transformar datos del backend al formato del frontend
       const transformedOrders = response.data.data.map(order => ({
         id: order._id,
@@ -101,7 +102,17 @@ const ManageOrdersPage = () => {
       setError(null);
 
       const backendStatus = reverseStatusMap[newStatus];
-      await axios.get(`/orders/${selectedOrder.id}`, {estado: backendStatus});
+      await axios.patch(`/orders/${selectedOrder.id}/status`, { estado: backendStatus });
+      toast.success('El producto ha sido actualizado', {
+        position: "bottom-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "colored",
+      });
+      
 
       // Actualizar la lista local
       setOrders(prevOrders =>
@@ -140,13 +151,13 @@ const ManageOrdersPage = () => {
 
   // ==================== FILTROS Y BÚSQUEDA ====================
   const filteredOrders = orders.filter(order => {
-    const matchesSearch = 
+    const matchesSearch =
       order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.customerEmail.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const matchesStatus = filterStatus === '' || order.status === filterStatus;
-    
+
     return matchesSearch && matchesStatus;
   });
 
@@ -154,7 +165,7 @@ const ManageOrdersPage = () => {
   const stats = {
     total: orders.length,
     pendientes: orders.filter(o => o.status === 'Pendiente').length,
-    enProceso: orders.filter(o => 
+    enProceso: orders.filter(o =>
       o.status === 'En Producción' || o.status === 'Enviando'
     ).length,
     completados: orders.filter(o => o.status === 'Entregado').length
@@ -184,10 +195,10 @@ const ManageOrdersPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Sidebar />
-      
+
       <div className="flex-1">
         <Header />
-        
+
         <div className="container mx-auto px-6 py-8">
           {/* ========== HEADER ========== */}
           <div className="mb-8 flex items-center justify-between">
@@ -329,8 +340,8 @@ const ManageOrdersPage = () => {
                 </thead>
                 <tbody>
                   {filteredOrders.map((order) => (
-                    <tr 
-                      key={order.id} 
+                    <tr
+                      key={order.id}
                       className="border-b border-gray-100 hover:bg-gray-50 transition"
                     >
                       <td className="py-4 px-4">
@@ -372,7 +383,7 @@ const ManageOrdersPage = () => {
                           <button
                             onClick={() => openStatusModal(order)}
                             disabled={
-                              order.status === 'Entregado' || 
+                              order.status === 'Entregado' ||
                               order.status === 'Cancelado'
                             }
                             className={`
@@ -405,8 +416,8 @@ const ManageOrdersPage = () => {
               {filteredOrders.length === 0 && (
                 <div className="text-center py-12">
                   <p className="text-gray-500">
-                    {searchTerm || filterStatus 
-                      ? 'No se encontraron pedidos con los filtros aplicados' 
+                    {searchTerm || filterStatus
+                      ? 'No se encontraron pedidos con los filtros aplicados'
                       : 'No hay pedidos registrados'}
                   </p>
                   {(searchTerm || filterStatus) && (
@@ -434,8 +445,6 @@ const ManageOrdersPage = () => {
             )}
           </Card>
         </div>
-
-        <Footer />
       </div>
 
       {/* ========== MODAL DE CAMBIO DE ESTADO ========== */}

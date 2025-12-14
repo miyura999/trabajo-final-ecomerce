@@ -23,7 +23,6 @@ class ProductController {
   async createProduct(req, res) {
     try {
       const product = await productService.createProduct(req.body);
-      console.log("Cuerpo: ", req.body)
       return successResponse(res, 201, 'Producto creado exitosamente', product);
     } catch (error) {
       return errorResponse(res, 400, error.message);

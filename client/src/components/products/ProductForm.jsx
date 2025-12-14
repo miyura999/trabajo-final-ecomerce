@@ -141,7 +141,6 @@ export default function ProductForm({ onSubmit, initialData, mode }) {
 
           const dataImg = await resImg.json();
           imageUrl = dataImg.secure_url;
-          console.log('Imagen subida exitosamente:', imageUrl);
         }
 
         // Crear objeto del producto con la URL de la imagen

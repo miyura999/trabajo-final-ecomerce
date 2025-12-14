@@ -15,10 +15,8 @@ class CartController {
     try {
       const { productId, cantidad } = req.body;
       const cart = await cartService.addItem(req.user.id, productId, cantidad);
-      console.log("📥 Controller addItem recibe datos:", req.body);
       return successResponse(res, 200, 'Producto agregado al carrito', cart);
     } catch (error) {
-      console.log(error);
       
       return errorResponse(res, 400, error);
 

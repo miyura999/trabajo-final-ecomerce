@@ -53,11 +53,11 @@ const RegisterPage = () => {
     handleSubmit
   } = useForm(
     {
-      nombre: 'miguel',
-      email: 'miguel@gmail.com',
-      telefono: '3001234567',
-      password: 'miguel123A',
-      confirmPassword: 'miguel123A'
+      nombre: '',
+      email: '',
+      telefono: '',
+      password: '',
+      confirmPassword: ''
     },
     validationRules
   );

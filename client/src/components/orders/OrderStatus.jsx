@@ -2,36 +2,37 @@ import React from 'react';
 import { Clock, Package, Truck, CheckCircle, XCircle } from 'lucide-react';
 
 const OrderStatus = ({ status, showIcon = true, size = 'md' }) => {
+
   const statusConfig = {
-    'Pendiente': {
+    'pendiente': {
       icon: Clock,
       color: 'bg-yellow-100 text-yellow-800 border-yellow-300',
       bgColor: 'bg-yellow-500',
       textColor: 'text-yellow-600',
       label: 'Pendiente'
     },
-    'En Producción': {
+    'en_produccion': {
       icon: Package,
       color: 'bg-blue-100 text-blue-800 border-blue-300',
       bgColor: 'bg-blue-500',
       textColor: 'text-blue-600',
       label: 'En Producción'
     },
-    'Enviando': {
+    'enviando': {
       icon: Truck,
       color: 'bg-purple-100 text-purple-800 border-purple-300',
       bgColor: 'bg-purple-500',
       textColor: 'text-purple-600',
       label: 'En Camino'
     },
-    'Entregado': {
+    'entregado': {
       icon: CheckCircle,
       color: 'bg-green-100 text-green-800 border-green-300',
       bgColor: 'bg-green-500',
       textColor: 'text-green-600',
       label: 'Entregado'
     },
-    'Cancelado': {
+    'cancelado': {
       icon: XCircle,
       color: 'bg-red-100 text-red-800 border-red-300',
       bgColor: 'bg-red-500',

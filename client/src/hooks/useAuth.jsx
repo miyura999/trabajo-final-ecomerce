@@ -9,6 +9,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState('')
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -19,6 +20,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const decoded = jwtDecode(token)
       setUser(decoded)
+      setUserId(decoded.id)
     } catch (error) {
       setIsAuthenticated(false)
     }
@@ -36,6 +38,7 @@ export const AuthProvider = ({ children }) => {
         // Guardar tokens y usuario en localStorage
         localStorage.setItem('token', token);
         localStorage.setItem('refreshToken', refreshToken);
+        localStorage.setItem('userId', user._id )
 
         setUser(user);
         setIsAuthenticated(true);
@@ -139,6 +142,7 @@ export const AuthProvider = ({ children }) => {
     user,
     isAuthenticated,
     loading,
+    userId,
     login,
     register,
     logout,

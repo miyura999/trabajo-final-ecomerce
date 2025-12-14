@@ -12,7 +12,9 @@ import ManageProductsPage from '../pages/admin/ManageProductsPage';
 import ManageOrdersPage from '../pages/admin/ManageOrdersPage';
 import ManageUsersPage from '../pages/admin/ManageUsersPage';
 import PrivateRoute from './PrivateRoute';
-import AdminRoute from './AdminRoute';  
+import AdminRoute from './AdminRoute';
+import Chat from '../pages/admin/chatPage';
+import PageNotFound from '../components/layout/PageNotFound';
 
 const AppRoutes = () => {
   return (
@@ -20,35 +22,35 @@ const AppRoutes = () => {
       {/* Rutas públicas */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
-        <Route path="/" element={<ProductsPage />} />
-        <Route path="/products" element={<ProductsPage />} />
-        <Route path="/products/:id" element={<ProductDetailPage />} />
+      <Route path="/" element={<ProductsPage />} />
+      <Route path="/products" element={<ProductsPage />} />
+      <Route path="/products/:id" element={<ProductDetailPage />} />
 
-        {/* Rutas privadas - Cliente */}
-        <Route
-          path="/cart"
-          element={
-            <PrivateRoute>
-              <CartPage />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/my-orders"
-          element={
-            <PrivateRoute>
-              <MyOrdersPage />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/orders/:id"
-          element={
-            <PrivateRoute>
-              <OrderDetailPage />
-            </PrivateRoute>
-          }
-        />
+      {/* Rutas privadas - Cliente */}
+      <Route
+        path="/cart"
+        element={
+          <PrivateRoute>
+            <CartPage />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/my-orders"
+        element={
+          <PrivateRoute>
+            <MyOrdersPage />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/orders/:id"
+        element={
+          <PrivateRoute>
+            <OrderDetailPage />
+          </PrivateRoute>
+        }
+      />
 
       {/* Rutas privadas - Admin */}
       <Route
@@ -83,6 +85,12 @@ const AppRoutes = () => {
           </AdminRoute>
         }
       />
+      <Route path='/chat'
+        element={
+          <Chat />
+        } />
+
+      <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
 };

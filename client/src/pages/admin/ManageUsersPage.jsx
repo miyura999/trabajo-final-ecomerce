@@ -243,9 +243,6 @@ const ManageUsersPage = () => {
 
     try {
       if (modalMode === 'create') {
-        // Crear usuario - asegurar que role se envíe correctamente
-        console.log('📤 Datos a enviar:', formData);
-        console.log('📋 Role seleccionado:', formData.role);
         
         const result = await usersService.createUser(formData);
         
