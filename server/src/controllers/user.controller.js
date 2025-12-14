@@ -1,6 +1,8 @@
 const userService = require('../services/user.service');
 const { successResponse, errorResponse } = require('../helpers/response.helper');
 const UserModel = require('../models/User.model');
+const ProductModel = require('../models/Product.model');
+const OrderModel = require('../models/Order.model')
 
 class UserController {
   async getAllUsers(req, res) {
@@ -55,6 +57,33 @@ class UserController {
       return successResponse(res, 200, 'Perfil obtenido exitosamente', user);
     } catch (error) {
       return errorResponse(res, 404, error.message);
+    }
+  }
+
+  async getStats(req, res) {
+    try {
+      const productsCount = await ProductModel.estimatedDocumentCount()
+      const usersCount = await UserModel.estimatedDocumentCount()
+      const stats = await OrderModel.aggregate([
+        {
+          $match: {
+            estado: { $in: ['entregado'] }
+          }
+        },
+        {
+          $group: {
+            _id: null,
+            totalVentas: { $sum: '$total' },
+            numeroPedidos: { $sum: 1 },
+            ventaPromedio: { $avg: '$total' },
+            ventaMaxima: { $max: '$total' },
+            ventaMinima: { $min: '$total' }
+          }
+        }
+      ]);
+      return successResponse(res, 200, { products: productsCount, users: usersCount, orderStats: stats })
+    } catch (error) {
+      return errorResponse(res, 500, error.message)
     }
   }
 }

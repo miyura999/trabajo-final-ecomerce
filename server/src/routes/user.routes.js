@@ -15,5 +15,6 @@ router.get('/:id', authenticate, authorize('admin'), userIdValidator, validateRe
 router.post('/', authenticate, authorize('admin'), createUserValidator, validateRequest, userController.createUser);
 router.put('/:id', authenticate, authorize('admin'), updateUserValidator, validateRequest, userController.updateUser);
 router.delete('/:id', authenticate, authorize('admin'), userIdValidator, validateRequest, userController.deleteUser);
+router.post('/stats', authenticate, authorize('admin'), userController.getStats)
 
 module.exports = router;
