@@ -6,18 +6,23 @@ const authorize = require('../middlewares/roles.middleware');
 const { addItemValidator, updateItemValidator, itemIdValidator } = require('../validators/cart.validator');
 const validateRequest = require('../middlewares/validation.middleware');
 
-// Todas las rutas requieren autenticación como cliente
+// ✅ CORRECCIÓN: Agregar authorize('cliente')
 router.use(authenticate);
+router.use(authorize('cliente')); // ← ESTO FALTABA
 
+// Obtener carrito
 router.get('/', cartController.getCart);
 
-// IMPORTANTE: validateRequest debe ir DESPUÉS de los validadores
+// Agregar item
 router.post('/items', addItemValidator, validateRequest, cartController.addItem);
 
+// Actualizar item
 router.put('/items/:id', updateItemValidator, validateRequest, cartController.updateItem);
 
+// Eliminar item
 router.delete('/items/:id', itemIdValidator, validateRequest, cartController.removeItem);
 
+// Vaciar carrito
 router.delete('/clear', cartController.clearCart);
 
 module.exports = router;

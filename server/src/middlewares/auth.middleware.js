@@ -37,6 +37,7 @@ const authenticate = async (req, res, next) => {
 
     next();
   } catch (error) {
+    console.error('❌ Error en authenticate:', error);
     return errorResponse(res, 500, 'Error en autenticación');
   }
 };

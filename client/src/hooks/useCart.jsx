@@ -9,9 +9,12 @@ export const CartProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [cartId, setCartId] = useState(null);
 
-  // Cargar carrito al montar el componente
+  // Cargar carrito al montar el componente (opcional)
   useEffect(() => {
-    fetchCart();
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetchCart();
+    }
   }, []);
 
   const fetchCart = async () => {
@@ -25,11 +28,17 @@ export const CartProvider = ({ children }) => {
         setCartItems(cart.items.map(item => ({
           ...item.producto,
           quantity: item.cantidad,
-          cartItemId: item._id
+          cartItemId: item._id,
+          precio: item.precio,
+          subtotal: item.subtotal
         })));
       }
     } catch (error) {
       console.error('Error al cargar el carrito:', error);
+      // Si el error es por autenticación, limpiar el carrito
+      if (error.response?.status === 401) {
+        setCartItems([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -69,7 +78,6 @@ export const CartProvider = ({ children }) => {
   const removeFromCart = async (cartItemId) => {
     try {
       setLoading(true);
-      // CORRECCIÓN: La ruta correcta según tu backend
       const response = await axios.delete(`/cart/items/${cartItemId}`);
 
       if (response.data.success) {
@@ -99,7 +107,6 @@ export const CartProvider = ({ children }) => {
 
     try {
       setLoading(true);
-      // CORRECCIÓN: La ruta correcta según tu backend
       const response = await axios.put(`/cart/items/${cartItemId}`, {
         cantidad: quantity
       });
@@ -126,11 +133,12 @@ export const CartProvider = ({ children }) => {
   const clearCart = async () => {
     try {
       setLoading(true);
-      // CORRECCIÓN: La ruta correcta según tu backend (DELETE a /cart, no /cart/clear)
-      const response = await axios.delete('/cart');
+      // ✅ CORRECCIÓN: La ruta correcta es /cart/clear
+      const response = await axios.delete('/cart/clear');
 
       if (response.data.success) {
         setCartItems([]);
+        setCartId(null);
         toast.success('Carrito vaciado exitosamente', {
           position: "top-right",
           autoClose: 2000,

@@ -24,9 +24,4 @@ const cartItemSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Calcular subtotal antes de guardar - SIN next()
-cartItemSchema.pre('save', function() {
-  this.subtotal = this.cantidad * this.precio;
-});
-
 module.exports = mongoose.model('CartItem', cartItemSchema);
