@@ -11,10 +11,14 @@ import { useCart } from '../../hooks/useCart';
 
 const CartPage = () => {
   const navigate = useNavigate();
-  const { cartItems, updateQuantity, removeFromCart, clearCart, getTotal } = useCart();
+  const { cartItems, updateQuantity, removeFromCart, clearCart, getTotal, refreshCart } = useCart();
   const [showClearModal, setShowClearModal] = useState(false);
   const [loading, setLoading] = useState(false);
 
+
+  useEffect(() => {
+    refreshCart()
+  }, [])
   const handleCheckout = () => {
     setLoading(true);
     // Simulación de proceso de checkout

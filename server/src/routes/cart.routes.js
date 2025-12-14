@@ -8,7 +8,6 @@ const validateRequest = require('../middlewares/validation.middleware');
 
 // Todas las rutas requieren autenticación como cliente
 router.use(authenticate);
-router.use(authorize('cliente'));
 
 router.get('/', cartController.getCart);
 

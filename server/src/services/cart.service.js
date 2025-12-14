@@ -18,7 +18,6 @@ class CartService {
   }
 
   async addItem(userId, productId, cantidad = 1) {
-    // Verificar que el producto existe y tiene stock
     const product = await Product.findById(productId);
     
     if (!product) {
@@ -29,21 +28,18 @@ class CartService {
       throw new Error('Stock insuficiente');
     }
 
-    // Obtener o crear carrito
     let cart = await Cart.findOne({ usuario: userId });
     
     if (!cart) {
       cart = await Cart.create({ usuario: userId, items: [] });
     }
 
-    // Buscar si el item ya existe en el carrito
     const existingItem = await CartItem.findOne({
       _id: { $in: cart.items },
       producto: productId
     });
 
     if (existingItem) {
-      // Actualizar cantidad
       existingItem.cantidad += cantidad;
       
       if (existingItem.cantidad > product.stock) {
@@ -53,7 +49,6 @@ class CartService {
       existingItem.subtotal = existingItem.cantidad * existingItem.precio;
       await existingItem.save();
     } else {
-      // Crear nuevo item
       const newItem = await CartItem.create({
         producto: productId,
         cantidad,
@@ -77,11 +72,13 @@ class CartService {
 
     const item = await CartItem.findById(itemId).populate('producto');
     
-    if (!item || !cart.items.includes(itemId)) {
+    // ✅ CORRECCIÓN: usar .some() en lugar de .includes()
+    const itemExists = cart.items.some(id => id.toString() === itemId.toString());
+    
+    if (!item || !itemExists) {
       throw new Error('Item no encontrado en el carrito');
     }
 
-    // Verificar stock
     if (cantidad > item.producto.stock) {
       throw new Error('Stock insuficiente');
     }
@@ -100,7 +97,8 @@ class CartService {
       throw new Error('Carrito no encontrado');
     }
 
-    const itemIndex = cart.items.indexOf(itemId);
+    // ✅ CORRECCIÓN: usar .findIndex() en lugar de .indexOf()
+    const itemIndex = cart.items.findIndex(id => id.toString() === itemId.toString());
     
     if (itemIndex === -1) {
       throw new Error('Item no encontrado en el carrito');
@@ -121,7 +119,6 @@ class CartService {
       throw new Error('Carrito no encontrado');
     }
 
-    // Eliminar todos los items
     await CartItem.deleteMany({ _id: { $in: cart.items } });
     
     cart.items = [];
@@ -135,8 +132,11 @@ class CartService {
     const cart = await Cart.findById(cartId).populate('items');
     
     let total = 0;
-    for (const item of cart.items) {
-      total += item.subtotal;
+    
+    if (cart.items && cart.items.length > 0) {
+      for (const item of cart.items) {
+        total += item.subtotal;
+      }
     }
     
     cart.total = total;

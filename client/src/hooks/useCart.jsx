@@ -1,57 +1,151 @@
+import axios from 'axios';
 import { useState, useEffect, createContext, useContext } from 'react';
+import { toast } from 'react-toastify';
 
 const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
-  const [cartItems, setCartItems] = useState(() => {
-    const storedCart = localStorage.getItem('cart');
-    return storedCart ? JSON.parse(storedCart) : [];
-  });
+  const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [cartId, setCartId] = useState(null);
 
-  const addToCart = (product, quantity = 1) => {
-    setCartItems(prevCartItems => {
-      const existingItem = prevCartItems.find(
-        item => item._id === product._id
-      );
+  // Cargar carrito al montar el componente
+  useEffect(() => {
+    fetchCart();
+  }, []);
 
-      if (existingItem) {
-        return prevCartItems.map(item =>
-          item._id === product._id
-            ? { ...item, quantity: item.quantity + quantity }
-            : item
-        );
+  const fetchCart = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get('/cart');
+      
+      if (response.data.success) {
+        const cart = response.data.data;
+        setCartId(cart._id);
+        setCartItems(cart.items.map(item => ({
+          ...item.producto,
+          quantity: item.cantidad,
+          cartItemId: item._id
+        })));
       }
-
-      const newState = [...prevCartItems, { ...product, quantity }]
-      localStorage.setItem('cart', JSON.stringify(newState));
-      return newState
-    });
+    } catch (error) {
+      console.error('Error al cargar el carrito:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const removeFromCart = (productId) => {
-    setCartItems(prevCartItems =>
-      prevCartItems.filter(item => item._id !== productId)
-    );
+  const addToCart = async (product, quantity = 1) => {
+    try {
+      setLoading(true);
+      const response = await axios.post('/cart/items', {
+        productId: product._id,
+        cantidad: quantity
+      });
+
+      if (response.data.success) {
+        await fetchCart();
+        toast.success(`${product.nombre} agregado al carrito`, {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      }
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Error al agregar producto al carrito';
+      toast.error(errorMessage, {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      console.error('Error al agregar al carrito:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const updateQuantity = (productId, quantity) => {
+  const removeFromCart = async (cartItemId) => {
+    try {
+      setLoading(true);
+      // CORRECCIÓN: La ruta correcta según tu backend
+      const response = await axios.delete(`/cart/items/${cartItemId}`);
+
+      if (response.data.success) {
+        await fetchCart();
+        toast.info('Producto eliminado del carrito', {
+          position: "top-right",
+          autoClose: 2000,
+        });
+      }
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Error al eliminar producto';
+      toast.error(errorMessage, {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      console.error('Error al eliminar del carrito:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateQuantity = async (cartItemId, quantity) => {
     if (quantity <= 0) {
-      removeFromCart(productId);
+      await removeFromCart(cartItemId);
       return;
     }
 
-    setCartItems(prevCartItems =>
-      prevCartItems.map(item =>
-        item._id === productId
-          ? { ...item, quantity }
-          : item
-      )
-    );
+    try {
+      setLoading(true);
+      // CORRECCIÓN: La ruta correcta según tu backend
+      const response = await axios.put(`/cart/items/${cartItemId}`, {
+        cantidad: quantity
+      });
+
+      if (response.data.success) {
+        await fetchCart();
+        toast.success('Cantidad actualizada', {
+          position: "top-right",
+          autoClose: 2000,
+        });
+      }
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Error al actualizar cantidad';
+      toast.error(errorMessage, {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      console.error('Error al actualizar cantidad:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const clearCart = () => {
-    setCartItems([]);
+  const clearCart = async () => {
+    try {
+      setLoading(true);
+      // CORRECCIÓN: La ruta correcta según tu backend (DELETE a /cart, no /cart/clear)
+      const response = await axios.delete('/cart');
+
+      if (response.data.success) {
+        setCartItems([]);
+        toast.success('Carrito vaciado exitosamente', {
+          position: "top-right",
+          autoClose: 2000,
+        });
+      }
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Error al vaciar el carrito';
+      toast.error(errorMessage, {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      console.error('Error al vaciar el carrito:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getTotal = () => {
@@ -65,7 +159,7 @@ export const CartProvider = ({ children }) => {
   };
 
   const isInCart = (productId) => {
-    return cartItems.some(item => item.id === productId);
+    return cartItems.some(item => item._id === productId);
   };
 
   const value = {
@@ -78,7 +172,8 @@ export const CartProvider = ({ children }) => {
     getTotal,
     getItemCount,
     isInCart,
-    itemCount: getItemCount()
+    itemCount: getItemCount(),
+    refreshCart: fetchCart
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
