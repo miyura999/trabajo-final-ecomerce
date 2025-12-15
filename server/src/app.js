@@ -23,11 +23,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api', router);  // Rutas de API primero
 
 // Servir archivos estáticos
-app.use(express.static(path.join(__dirname, '../client/dist')));
+app.use(express.static(path.join(__dirname, '../../client/dist')));
 
 // Catch-all solo para rutas que NO empiecen con /api
 app.get(/^(?!\/api).*/, (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+  res.sendFile(path.join(__dirname, '../../client/dist/index.html'));
 });
 const PORT = process.env.PORT || 5000;
 
