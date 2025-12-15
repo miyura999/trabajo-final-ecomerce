@@ -1,8 +1,7 @@
 import axios from 'axios';
 
 // Configurar la URL base de tu API
-axios.defaults.baseURL = 'http://localhost:5000/api'; // Ajusta según tu backend
-
+axios.defaults.baseURL = import.meta.env.MODE === "development" ? "http://localhost:5000/api" : "/api"
 // Interceptor para agregar el token a cada request
 axios.interceptors.request.use(
   (config) => {

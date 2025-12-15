@@ -1,7 +1,7 @@
 import axios from 'axios';
 import api from './api.service';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = import.meta.env.MODE === "development" ? "http://localhost:5000/api" : "/api"
 
 // Crear instancia de axios con configuración base
 const apiClient = axios.create({
