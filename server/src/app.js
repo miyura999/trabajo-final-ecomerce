@@ -21,12 +21,7 @@ app.use(express.json());
 app.use(morgan('dev'))
 app.use(express.urlencoded({ extended: true }));
 app.use('/api', router)
-app.use(express.static(path.join(__dirname, "../client/dist")));
-
-// Catch-all para SPA - debe ir al FINAL de todas las rutas
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, "../client/dist", "index.html"));
-});
+app.use(express.static(__dirname + "../client/dist"));
 
 const PORT = process.env.PORT || 5000;
 
