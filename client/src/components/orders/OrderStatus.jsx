@@ -41,7 +41,9 @@ const OrderStatus = ({ status, showIcon = true, size = 'md' }) => {
     }
   };
 
-  const config = statusConfig[status] || statusConfig['Pendiente'];
+  // Normalize status to lowercase with underscores
+  const normalizedStatus = status?.toLowerCase().replace(/\s+/g, '_') || 'pendiente';
+  const config = statusConfig[normalizedStatus] || statusConfig['pendiente'];
   const Icon = config.icon;
 
   const sizeClasses = {
@@ -64,20 +66,22 @@ const OrderStatus = ({ status, showIcon = true, size = 'md' }) => {
 // Componente de línea de tiempo de estados
 export const OrderStatusTimeline = ({ currentStatus }) => {
   const statuses = [
-    { key: 'Pendiente', label: 'Pendiente', icon: Clock },
-    { key: 'En Producción', label: 'En Producción', icon: Package },
-    { key: 'Enviando', label: 'En Camino', icon: Truck },
-    { key: 'Entregado', label: 'Entregado', icon: CheckCircle }
+    { key: 'pendiente', label: 'Pendiente', icon: Clock },
+    { key: 'en_produccion', label: 'En Producción', icon: Package },
+    { key: 'enviando', label: 'En Camino', icon: Truck },
+    { key: 'entregado', label: 'Entregado', icon: CheckCircle }
   ];
 
   const statusConfig = {
-    'Pendiente': { color: 'bg-yellow-500', index: 0 },
-    'En Producción': { color: 'bg-blue-500', index: 1 },
-    'Enviando': { color: 'bg-purple-500', index: 2 },
-    'Entregado': { color: 'bg-green-500', index: 3 }
+    'pendiente': { color: 'bg-yellow-500', index: 0 },
+    'en_produccion': { color: 'bg-blue-500', index: 1 },
+    'enviando': { color: 'bg-purple-500', index: 2 },
+    'entregado': { color: 'bg-green-500', index: 3 }
   };
 
-  const currentIndex = statusConfig[currentStatus]?.index ?? 0;
+  // Normalize status to lowercase with underscores
+  const normalizedStatus = currentStatus?.toLowerCase().replace(/\s+/g, '_') || 'pendiente';
+  const currentIndex = statusConfig[normalizedStatus]?.index ?? 0;
 
   return (
     <div className="py-6">
@@ -123,4 +127,4 @@ export const OrderStatusTimeline = ({ currentStatus }) => {
   );
 };
 
-export default OrderStatus;
+export default OrderStatus

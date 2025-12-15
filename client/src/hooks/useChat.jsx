@@ -3,7 +3,10 @@ import io from 'socket.io-client';
 
 const SocketContext = createContext();
 
-const URL_SOCKET = import.meta.env.MODE === "development" ? "http://localhost:5000/api" : "/api"
+// 👇 Ajusta la URL según tu configuración
+const URL_SOCKET = import.meta.env.MODE === "development"
+    ? "http://localhost:5000"
+    : window.location.origin;
 
 export const useSocket = () => {
     const context = useContext(SocketContext);
@@ -25,13 +28,16 @@ export const SocketProvider = ({ children }) => {
             return;
         }
 
-        // Crear socket con opciones específicas
+
+        // Crear socket
         const newSocket = io(URL_SOCKET, {
             autoConnect: true,
             reconnection: true,
             reconnectionDelay: 1000,
             reconnectionAttempts: 5,
-            transports: ['websocket', 'polling'] // 👈 Importante para compatibilidad
+            transports: ['websocket', 'polling'],
+            withCredentials: true, // 👈 Importante para CORS
+            query: { userId } // 👈 Enviar userId en la conexión inicial
         });
 
         // Eventos de conexión
@@ -61,7 +67,7 @@ export const SocketProvider = ({ children }) => {
         return () => {
             newSocket.close();
         };
-    }, []); // 👈 Solo ejecutar una vez
+    }, []); // Si necesitas que reaccione a cambios de userId, agrégalo aquí
 
     return (
         <SocketContext.Provider value={{ socket, onlineUsers, isConnected }}>

@@ -1,12 +1,22 @@
-const { Server } = require('socket.io')
-const http = require('http')
-const express = require('express')
+const { Server } = require('socket.io');
+const http = require('http');
+const express = require('express');
 const cors = require('cors');
 
-const app = express()
-const server = http.createServer(app)
+const app = express();
+const server = http.createServer(app);
 
-const io = new Server(server)
+// 👇 CONFIGURACIÓN CORRECTA DE SOCKET.IO CON CORS
+const io = new Server(server, {
+    cors: {
+        origin: process.env.NODE_ENV === 'development'
+            ? 'http://localhost:5173' || true
+            : 'https://trabajo-final-ecomerce.onrender.com',
+        methods: ['GET', 'POST'],
+        credentials: true
+    },
+    transports: ['websocket', 'polling'] // 👈 Importante para compatibilidad
+});
 
 app.use(cors());
 
@@ -29,6 +39,7 @@ io.on('connection', (socket) => {
 
     socket.on('send-message', ({ receiverId, senderId, text, message }) => {
         const receiverSocketId = userSocketMap.get(receiverId);
+
 
         if (receiverSocketId) {
             io.to(receiverSocketId).emit('receive-message', {
@@ -56,4 +67,4 @@ io.on('connection', (socket) => {
 
 module.exports = {
     io, app, server
-}
+};
