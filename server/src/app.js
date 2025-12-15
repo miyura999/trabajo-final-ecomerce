@@ -20,7 +20,7 @@ connectDB().then(async () => {
 app.use(express.json());
 app.use(morgan('dev'))
 app.use(express.urlencoded({ extended: true }));
-app.use(router)
+app.use('/api', router)
 app.use(express.static(path.join(__dirname, "../client/dist")));
 
 // Catch-all para SPA - debe ir al FINAL de todas las rutas
