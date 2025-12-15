@@ -21,16 +21,12 @@ app.use(express.json());
 app.use(morgan('dev'))
 app.use(express.urlencoded({ extended: true }));
 app.use(router)
+app.use(express.static(path.join(__dirname, "../client/dist")));
 
-
-if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../client/dist")));
-
-  // Fixed: Changed "*" to "/*"
-  app.get("/*", (req, res) => {
-    res.sendFile(path.join(__dirname, "../client/dist/index.html"));
-  });
-}
+// Catch-all para SPA - debe ir al FINAL de todas las rutas
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, "../client/dist", "index.html"));
+});
 
 const PORT = process.env.PORT || 5000;
 
