@@ -3,6 +3,8 @@ import io from 'socket.io-client';
 
 const SocketContext = createContext();
 
+const URL_SOCKET = import.meta.env.MODE === "development" ? "http://localhost:5000/api" : "/api"
+
 export const useSocket = () => {
     const context = useContext(SocketContext);
     if (!context) {
@@ -24,7 +26,7 @@ export const SocketProvider = ({ children }) => {
         }
 
         // Crear socket con opciones específicas
-        const newSocket = io('http://localhost:5000', {
+        const newSocket = io(URL_SOCKET, {
             autoConnect: true,
             reconnection: true,
             reconnectionDelay: 1000,
